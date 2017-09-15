@@ -2,8 +2,8 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.12.12 (2017-09-15)
+--------------------
 * Don't publish joint states if there are no joints (`#212 <https://github.com/ros/robot_model/issues/212>`_)
 * Contributors: Chris Lalancette
 
