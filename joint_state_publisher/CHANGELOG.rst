@@ -2,8 +2,8 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.11.15 (2017-09-15)
+--------------------
 * Added forward declaration for recent versions of urdfdom (`#217 <https://github.com/ros/robot_model/pull/217>`_)
 * pcrecpp is no longer a dependency (`#216 <https://github.com/ros/robot_model/pull/216>`_)
 * Contributors: Chris Lalancette, Michael Görner
