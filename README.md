@@ -1,16 +1,9 @@
-# Robot Model
+# Joint State Publisher
 
-`robot_model` contains packages for modeling various aspects of robot information, specified in the Xml Robot Description Format (URDF).
-The core package of this stack is urdf, which parses URDF files, and constructs an object model (C++) of the robot.
+This contains a package for publishing `sensor_msgs/JointState` messages for a robot described with URDF.
+See the ROS wiki for API documentation and tutorials.
 
-## Deprecation
-This repository and the `robot_model` metapackage are deprecated.
-The other packages will continue to be maintained, but are being moved to new repositories.
-More information is available at [`ros/robot_model#195`](https://github.com/ros/robot_model/issues/195).
+* [`joint_state_publisher`](http://wiki.ros.org/joint_state_publisher)
 
-**Moved Repos**
-
-* `collada_urdf` and `collada_parser`
-    * [`ros/collada_urdf`](https://github.com/ros/collada_urdf)
-* `kdl_parser` and `kdl_parser_py`
-    * [`ros/kdl_parser`](https://github.com/ros/kdl_parser)
+This was originally part of the [`ros/robot_model`](https://github.com/ros/robot_model) repository.
+It has been moved to this repo as described by [`ros/robot_model#195`](https://github.com/ros/robot_model/issues/195)
