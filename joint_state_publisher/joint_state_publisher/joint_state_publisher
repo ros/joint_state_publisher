@@ -40,20 +40,35 @@ def get_param(name, value=None):
 
 
 class JointStatePublisher():
-    def __init__(self):
-        description = get_param('robot_description')
+    def init_collada(self, description):
+
+        robot = xml.dom.minidom.parseString(description).getElementsByTagName('kinematics_model')[0].getElementsByTagName('technique_common')[0]
+
+        for child in robot.childNodes:
+            if child.nodeType is child.TEXT_NODE:
+                continue
+            if child.localName == 'joint':
+                name = child.getAttribute('name')
+                if child.getElementsByTagName('revolute'):
+                    joint = child.getElementsByTagName('revolute')[0]
+                else:
+                    rospy.logwarn("Unknown joint type %s", child)
+                    continue
+
+                if joint:
+                    limit = joint.getElementsByTagName('limits')[0]
+                    minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
+                    maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
+                if minval == maxval:  # this is fixed joint
+                    continue
+
+                self.joint_list.append(name)
+                joint = {'min':minval*pi/180.0, 'max':maxval*pi/180.0, 'zero':0, 'position':0, 'velocity':0, 'effort':0}
+                self.free_joints[name] = joint
+
+    def init_urdf(self, description):
+
         robot = xml.dom.minidom.parseString(description).getElementsByTagName('robot')[0]
-        self.free_joints = {}
-        self.joint_list = []  # for maintaining the original order of the joints
-        self.dependent_joints = get_param("dependent_joints", {})
-        use_mimic = get_param('use_mimic_tags', True)
-        use_small = get_param('use_smallest_joint_limits', True)
-
-        self.zeros = get_param("zeros")
-
-        pub_def_positions = get_param("publish_default_positions", True)
-        pub_def_vels = get_param("publish_default_velocities", False)
-        pub_def_efforts = get_param("publish_default_efforts", False)
 
         # Find all non-fixed joints
         for child in robot.childNodes:
@@ -78,7 +93,7 @@ class JointStatePublisher():
                         continue
 
                 safety_tags = child.getElementsByTagName('safety_controller')
-                if use_small and len(safety_tags) == 1:
+                if self.use_small and len(safety_tags) == 1:
                     tag = safety_tags[0]
                     if tag.hasAttribute('soft_lower_limit'):
                         minval = max(minval, float(tag.getAttribute('soft_lower_limit')))
@@ -86,7 +101,7 @@ class JointStatePublisher():
                         maxval = min(maxval, float(tag.getAttribute('soft_upper_limit')))
 
                 mimic_tags = child.getElementsByTagName('mimic')
-                if use_mimic and len(mimic_tags) == 1:
+                if self.use_mimic and len(mimic_tags) == 1:
                     tag = mimic_tags[0]
                     entry = {'parent': tag.getAttribute('joint')}
                     if tag.hasAttribute('multiplier'):
@@ -108,16 +123,36 @@ class JointStatePublisher():
                     zeroval = 0
 
                 joint = {'min': minval, 'max': maxval, 'zero': zeroval}
-                if pub_def_positions:
+                if self.pub_def_positions:
                     joint['position'] = zeroval
-                if pub_def_vels:
+                if self.pub_def_vels:
                     joint['velocity'] = 0.0
-                if pub_def_efforts:
+                if self.pub_def_efforts:
                     joint['effort'] = 0.0
 
                 if jtype == 'continuous':
                     joint['continuous'] = True
                 self.free_joints[name] = joint
+
+    def __init__(self):
+        description = get_param('robot_description')
+
+        self.free_joints = {}
+        self.joint_list = [] # for maintaining the original order of the joints
+        self.dependent_joints = get_param("dependent_joints", {})
+        self.use_mimic = get_param('use_mimic_tags', True)
+        self.use_small = get_param('use_smallest_joint_limits', True)
+
+        self.zeros = get_param("zeros")
+
+        self.pub_def_positions = get_param("publish_default_positions", True)
+        self.pub_def_vels = get_param("publish_default_velocities", False)
+        self.pub_def_efforts = get_param("publish_default_efforts", False)
+
+        if xml.dom.minidom.parseString(description).getElementsByTagName('COLLADA'):
+            self.init_collada(description)
+        else:
+            self.init_urdf(description)
 
         use_gui = get_param("use_gui", False)
 
