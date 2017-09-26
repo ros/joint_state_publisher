@@ -40,10 +40,8 @@ def get_param(name, value=None):
 
 
 class JointStatePublisher():
-    def init_collada(self, description):
-
-        robot = xml.dom.minidom.parseString(description).getElementsByTagName('kinematics_model')[0].getElementsByTagName('technique_common')[0]
-
+    def init_collada(self, robot):
+        robot = robot.getElementsByTagName('kinematics_model')[0].getElementsByTagName('technique_common')[0]
         for child in robot.childNodes:
             if child.nodeType is child.TEXT_NODE:
                 continue
@@ -66,10 +64,8 @@ class JointStatePublisher():
                 joint = {'min':minval*pi/180.0, 'max':maxval*pi/180.0, 'zero':0, 'position':0, 'velocity':0, 'effort':0}
                 self.free_joints[name] = joint
 
-    def init_urdf(self, description):
-
-        robot = xml.dom.minidom.parseString(description).getElementsByTagName('robot')[0]
-
+    def init_urdf(self, robot):
+        robot = robot.getElementsByTagName('robot')[0]
         # Find all non-fixed joints
         for child in robot.childNodes:
             if child.nodeType is child.TEXT_NODE:
@@ -149,10 +145,11 @@ class JointStatePublisher():
         self.pub_def_vels = get_param("publish_default_velocities", False)
         self.pub_def_efforts = get_param("publish_default_efforts", False)
 
-        if xml.dom.minidom.parseString(description).getElementsByTagName('COLLADA'):
-            self.init_collada(description)
+        robot = xml.dom.minidom.parseString(description)
+        if robot.getElementsByTagName('COLLADA'):
+            self.init_collada(robot)
         else:
-            self.init_urdf(description)
+            self.init_urdf(robot)
 
         use_gui = get_param("use_gui", False)
 
