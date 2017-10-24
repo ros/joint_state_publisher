@@ -15,6 +15,7 @@ from python_qt_binding.QtWidgets import QPushButton
 from python_qt_binding.QtWidgets import QSlider
 from python_qt_binding.QtWidgets import QVBoxLayout
 from python_qt_binding.QtWidgets import QGridLayout
+from python_qt_binding.QtWidgets import QScrollArea
 from python_qt_binding.QtWidgets import QSpinBox
 from python_qt_binding.QtWidgets import QWidget
 
@@ -303,7 +304,13 @@ class JointStatePublisherGui(QWidget):
         self.jsp = jsp
         self.joint_map = {}
         self.vlayout = QVBoxLayout(self)
+        self.scrollable = QWidget()
         self.gridlayout = QGridLayout()
+        self.scroll = QScrollArea()
+        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll.setWidgetResizable(True)
+
         font = QFont("Helvetica", 9, QFont.Bold)
 
         ### Generate sliders ###
@@ -363,7 +370,9 @@ class JointStatePublisherGui(QWidget):
         # Set up a signal for updating the sliders based on external joint info
         self.sliderUpdateTrigger.connect(self.updateSliders)
 
-        self.vlayout.addLayout(self.gridlayout)
+        self.scrollable.setLayout(self.gridlayout)
+        self.scroll.setWidget(self.scrollable)
+        self.vlayout.addWidget(self.scroll)
 
         # Buttons for randomizing and centering sliders and
         # Spinbox for on-the-fly selecting number of rows
@@ -380,6 +389,7 @@ class JointStatePublisherGui(QWidget):
         self.maxrowsupdown.lineEdit().setReadOnly(True)  # don't edit it by hand to avoid weird resizing of window
         self.maxrowsupdown.valueChanged.connect(self.reorggrid_event)
         self.vlayout.addWidget(self.maxrowsupdown)
+        self.setLayout(self.vlayout)
 
     @pyqtSlot(int)
     def onValueChanged(self, event):
