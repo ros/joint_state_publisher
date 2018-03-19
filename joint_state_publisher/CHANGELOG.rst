@@ -2,6 +2,15 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* add bugtracker link now that this is not hosted on robot_model anymore
+* Added a scrollarea around the gridlayout to support large number of joints
+* pass robot objects into init_collada() and init_urdf()
+* add test for collada supports
+* add support for collada model : moved from https://github.com/ros/robot_model/pull/97
+* Contributors: Guillaume Walck, Kei Okada, Mikael Arguedas
+
 1.12.12 (2017-09-15)
 --------------------
 * Don't publish joint states if there are no joints (`#212 <https://github.com/ros/robot_model/issues/212>`_)
