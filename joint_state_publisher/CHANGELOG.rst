@@ -2,8 +2,8 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.12.13 (2018-03-19)
+--------------------
 * add bugtracker link now that this is not hosted on robot_model anymore
 * Added a scrollarea around the gridlayout to support large number of joints
 * pass robot objects into init_collada() and init_urdf()
