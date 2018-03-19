@@ -23,11 +23,14 @@ import xml.dom.minidom
 from sensor_msgs.msg import JointState
 from math import pi
 from threading import Thread
+from threading import Lock
 import sys
 import signal
 import math
 
 RANGE = 10000
+
+joints_lock = Lock()
 
 
 def get_param(name, value=None):
@@ -170,31 +173,32 @@ class JointStatePublisher():
         self.pub = rospy.Publisher('joint_states', JointState, queue_size=5)
 
     def source_cb(self, msg):
-        for i in range(len(msg.name)):
-            name = msg.name[i]
-            if name not in self.free_joints:
-                continue
+        with joints_lock:
+            for i in range(len(msg.name)):
+                name = msg.name[i]
+                if name not in self.free_joints:
+                    continue
 
-            if msg.position:
-                position = msg.position[i]
-            else:
-                position = None
-            if msg.velocity:
-                velocity = msg.velocity[i]
-            else:
-                velocity = None
-            if msg.effort:
-                effort = msg.effort[i]
-            else:
-                effort = None
+                if msg.position:
+                    position = msg.position[i]
+                else:
+                    position = None
+                if msg.velocity:
+                    velocity = msg.velocity[i]
+                else:
+                    velocity = None
+                if msg.effort:
+                    effort = msg.effort[i]
+                else:
+                    effort = None
 
-            joint = self.free_joints[name]
-            if position is not None:
-                joint['position'] = position
-            if velocity is not None:
-                joint['velocity'] = velocity
-            if effort is not None:
-                joint['effort'] = effort
+                joint = self.free_joints[name]
+                if position is not None:
+                    joint['position'] = position
+                if velocity is not None:
+                    joint['velocity'] = velocity
+                if effort is not None:
+                    joint['effort'] = effort
 
         if self.gui is not None:
             # signal instead of directly calling the update_sliders method, to switch to the QThread
@@ -394,15 +398,21 @@ class JointStatePublisherGui(QWidget):
     @pyqtSlot(int)
     def onValueChanged(self, event):
         # A slider value was changed, but we need to change the joint_info metadata.
-        for name, joint_info in self.joint_map.items():
-            joint_info['slidervalue'] = joint_info['slider'].value()
-            joint = joint_info['joint']
-            joint['position'] = self.sliderToValue(joint_info['slidervalue'], joint)
-            joint_info['display'].setText("%.2f" % joint['position'])
+        if joints_lock.acquire(False):
+            try:
+                for name, joint_info in self.joint_map.items():
+                    joint_info['slidervalue'] = joint_info['slider'].value()
+                    joint = joint_info['joint']
+                    joint['position'] = self.sliderToValue(joint_info['slidervalue'], joint)
+                    joint_info['display'].setText("%.2f" % joint['position'])
+            finally:
+                joints_lock.release();
 
     @pyqtSlot()
     def updateSliders(self):
-        self.update_sliders()
+        # This lock prevents onValueChanged call
+        with joints_lock:
+            self.update_sliders()
 
     def update_sliders(self):
         for name, joint_info in self.joint_map.items():
