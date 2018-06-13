@@ -307,8 +307,6 @@ class JointStatePublisherGui(QWidget):
         self.scrollable = QWidget()
         self.gridlayout = QGridLayout()
         self.scroll = QScrollArea()
-        self.scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.scroll.setWidgetResizable(True)
 
         font = QFont("Helvetica", 9, QFont.Bold)
@@ -386,7 +384,6 @@ class JointStatePublisherGui(QWidget):
         self.maxrowsupdown.setMinimum(1)
         self.maxrowsupdown.setMaximum(len(sliders))
         self.maxrowsupdown.setValue(self.num_rows)
-        self.maxrowsupdown.lineEdit().setReadOnly(True)  # don't edit it by hand to avoid weird resizing of window
         self.maxrowsupdown.valueChanged.connect(self.reorggrid_event)
         self.vlayout.addWidget(self.maxrowsupdown)
         self.setLayout(self.vlayout)
