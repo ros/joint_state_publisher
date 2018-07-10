@@ -395,7 +395,6 @@ class JointStatePublisherGui(QWidget):
         self.setLayout(self.vlayout)
 
     def onValueChangedOne(self, name):
-        print("On value changed %s" % (name))
         # A slider value was changed, but we need to change the joint_info metadata.
         joint_info = self.joint_map[name]
         joint_info['slidervalue'] = joint_info['slider'].value()
