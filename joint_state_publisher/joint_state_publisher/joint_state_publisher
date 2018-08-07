@@ -105,6 +105,8 @@ class JointStatePublisher():
                         entry['factor'] = float(tag.getAttribute('multiplier'))
                     if tag.hasAttribute('offset'):
                         entry['offset'] = float(tag.getAttribute('offset'))
+                    entry['maxval'] = maxval
+                    entry['minval'] = minval
 
                     self.dependent_joints[name] = entry
                     continue
@@ -265,6 +267,9 @@ class JointStatePublisher():
 
                 if has_position and 'position' in joint:
                     msg.position[i] = joint['position'] * factor + offset
+                    if name in self.dependent_joints:
+                        param = self.dependent_joints[name]
+                        msg.position[i] = sorted((param.get('minval'), msg.position[i], param.get('maxval')))[1]
                 if has_velocity and 'velocity' in joint:
                     msg.velocity[i] = joint['velocity'] * factor
                 if has_effort and 'effort' in joint:
