@@ -73,7 +73,7 @@ class JointStatePublisher():
                 continue
             if child.localName == 'joint':
                 jtype = child.getAttribute('type')
-                if jtype == 'fixed' or jtype == 'floating':
+                if jtype in ['fixed', 'floating', 'planar']:
                     continue
                 name = child.getAttribute('name')
                 self.joint_list.append(name)
