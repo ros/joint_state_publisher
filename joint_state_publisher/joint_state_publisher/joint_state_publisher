@@ -197,7 +197,9 @@ class JointStatePublisher():
                 joint['effort'] = effort
 
         if self.gui is not None:
-            # signal instead of directly calling the update_sliders method, to switch to the QThread
+            # Signal instead of directly calling the update_sliders method, to
+            # switch to the QThread.  Note that we do this only once at the end
+            # to avoid lots of overhead switching threads.
             self.gui.sliderUpdateTrigger.emit()
 
     def loop(self):
@@ -346,7 +348,8 @@ class JointStatePublisherGui(QWidget):
             self.joint_map[name] = {'slidervalue': 0, 'display': display,
                                     'slider': slider, 'joint': joint}
             # Connect to the signal provided by QSignal
-            slider.valueChanged.connect(self.onValueChanged)
+            slider.valueChanged.connect(lambda event,name=name: self.onValueChangedOne(name))
+
             sliders.append(joint_layout)
 
         # Determine number of rows to be used in grid
@@ -388,14 +391,13 @@ class JointStatePublisherGui(QWidget):
         self.vlayout.addWidget(self.maxrowsupdown)
         self.setLayout(self.vlayout)
 
-    @pyqtSlot(int)
-    def onValueChanged(self, event):
+    def onValueChangedOne(self, name):
         # A slider value was changed, but we need to change the joint_info metadata.
-        for name, joint_info in self.joint_map.items():
-            joint_info['slidervalue'] = joint_info['slider'].value()
-            joint = joint_info['joint']
-            joint['position'] = self.sliderToValue(joint_info['slidervalue'], joint)
-            joint_info['display'].setText("%.2f" % joint['position'])
+        joint_info = self.joint_map[name]
+        joint_info['slidervalue'] = joint_info['slider'].value()
+        joint = joint_info['joint']
+        joint['position'] = self.sliderToValue(joint_info['slidervalue'], joint)
+        joint_info['display'].setText("%.2f" % joint['position'])
 
     @pyqtSlot()
     def updateSliders(self):
