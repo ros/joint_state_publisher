@@ -36,10 +36,8 @@ RANGE = 10000
 
 
 class JointStatePublisher():
-    def get_param(self, name, value=None):
+    def get_param(self, name):
         param = self.node.get_parameter(name)
-        if param.type_ == rclpy.parameter.Parameter.Type.NOT_SET:
-            return value
         return param.value
 
     def init_collada(self, robot):
@@ -136,15 +134,16 @@ class JointStatePublisher():
         self.node = node
         self.free_joints = {}
         self.joint_list = [] # for maintaining the original order of the joints
-        self.dependent_joints = self.get_param('dependent_joints', {})
-        self.use_mimic = self.get_param('use_mimic_tags', True)
-        self.use_small = self.get_param('use_smallest_joint_limits', True)
 
-        self.zeros = self.get_param('zeros')
+        self.dependent_joints = {} # TODO: Set when rclpy supports map parameters
+        self.use_mimic = self.get_param('use_mimic_tags')
+        self.use_small = self.get_param('use_smallest_joint_limits')
 
-        self.pub_def_positions = self.get_param('publish_default_positions', True)
-        self.pub_def_vels = self.get_param('publish_default_velocities', False)
-        self.pub_def_efforts = self.get_param('publish_default_efforts', False)
+        self.zeros = None # TODO: Set when rclpy supports map parameters
+
+        self.pub_def_positions = self.get_param('publish_default_positions')
+        self.pub_def_vels = self.get_param('publish_default_velocities')
+        self.pub_def_efforts = self.get_param('publish_default_efforts')
 
         robot = xml.dom.minidom.parseString(description)
         if robot.getElementsByTagName('COLLADA'):
@@ -152,17 +151,17 @@ class JointStatePublisher():
         else:
             self.init_urdf(robot)
 
-        use_gui = self.get_param('use_gui', False)
+        use_gui = self.get_param('use_gui')
 
         if use_gui:
-            num_rows = self.get_param('num_rows', 0)
+            num_rows = self.get_param('num_rows')
             self.app = QApplication(sys.argv)
             self.gui = JointStatePublisherGui("Joint State Publisher", self, num_rows)
             self.gui.show()
         else:
             self.gui = None
 
-        source_list = self.get_param('source_list', [])
+        source_list = self.get_param('source_list')
         self.sources = []
         for source in source_list:
             self.sources.append(self.node.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb))
@@ -203,7 +202,7 @@ class JointStatePublisher():
             self.gui.sliderUpdateTrigger.emit()
 
     def loop(self):
-        hz = self.get_param('rate', 10)  # 10hz
+        hz = self.get_param('rate')
 
         delta = 0.0
 
@@ -483,7 +482,19 @@ def main(input_args=None):
     with open(parsed_args.urdf_file, 'r') as infp:
         urdf = infp.read()
 
-    node = rclpy.create_node('joint_state_publisher')
+    initial_parameters=[
+        rclpy.parameter.Parameter('num_rows', rclpy.parameter.Parameter.Type.INTEGER, 0),
+        rclpy.parameter.Parameter('publish_default_efforts', rclpy.parameter.Parameter.Type.BOOL, False),
+        rclpy.parameter.Parameter('publish_default_positions', rclpy.parameter.Parameter.Type.BOOL, True),
+        rclpy.parameter.Parameter('publish_default_velocities', rclpy.parameter.Parameter.Type.BOOL, False),
+        rclpy.parameter.Parameter('rate', rclpy.parameter.Parameter.Type.INTEGER, 10),  # 10hz
+        rclpy.parameter.Parameter('source_list', rclpy.parameter.Parameter.Type.STRING_ARRAY, []),
+        rclpy.parameter.Parameter('use_gui', rclpy.parameter.Parameter.Type.BOOL, False),
+        rclpy.parameter.Parameter('use_mimic_tags', rclpy.parameter.Parameter.Type.BOOL, True),
+        rclpy.parameter.Parameter('use_smallest_joint_limits', rclpy.parameter.Parameter.Type.BOOL, True),
+    ]
+
+    node = rclpy.create_node('joint_state_publisher', initial_parameters=initial_parameters)
     jsp = JointStatePublisher(node, urdf)
 
     if jsp.gui is None:
