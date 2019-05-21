@@ -62,7 +62,7 @@ class JointStatePublisher():
                     continue
 
                 self.joint_list.append(name)
-                joint = {'min':minval*pi/180.0, 'max':maxval*pi/180.0, 'zero':0, 'position':0, 'velocity':0, 'effort':0}
+                joint = {'min': minval * pi / 180.0, 'max': maxval * pi / 180.0, 'zero': 0, 'position': 0, 'velocity': 0, 'effort': 0}
                 self.free_joints[name] = joint
 
     def init_urdf(self, robot):
@@ -115,7 +115,7 @@ class JointStatePublisher():
                 if self.zeros and name in self.zeros:
                     zeroval = self.zeros[name]
                 elif minval > 0 or maxval < 0:
-                    zeroval = (maxval + minval)/2
+                    zeroval = (maxval + minval) / 2
                 else:
                     zeroval = 0
 
@@ -131,11 +131,25 @@ class JointStatePublisher():
                     joint['continuous'] = True
                 self.free_joints[name] = joint
 
+        if self.nonURDFJoints:
+            for name in self.zeros:
+                joint = {'min': -1e308, 'max': 1e308, 'continuous': True}
+                joint['zero'] = self.zeros[name]
+                joint['position'] = self.zeros[name]
+
+                if not name in self.joint_list:
+                    self.free_joints[name] = joint
+                    self.joint_list.append(name)
+
     def __init__(self):
         description = get_param('robot_description')
 
+        self.nonURDFJoints = get_param("allow_nonURDF_joints", False)
+        if self.nonURDFJoints:
+            rospy.loginfo("Allowing nonURDF joints on source topic and/or zero list")
+
         self.free_joints = {}
-        self.joint_list = [] # for maintaining the original order of the joints
+        self.joint_list = []  # for maintaining the original order of the joints
         self.dependent_joints = get_param("dependent_joints", {})
         self.use_mimic = get_param('use_mimic_tags', True)
         self.use_small = get_param('use_smallest_joint_limits', True)
@@ -173,7 +187,13 @@ class JointStatePublisher():
         for i in range(len(msg.name)):
             name = msg.name[i]
             if name not in self.free_joints:
-                continue
+                if self.nonURDFJoints:
+                    joint = {'min': -1e308, 'max': 1e308, 'continuous': True}
+                    joint['zero'] = 0
+                    self.free_joints[name] = joint
+                    self.joint_list.append(name)
+                else:
+                    continue
 
             if msg.position:
                 position = msg.position[i]
@@ -341,14 +361,14 @@ class JointStatePublisherGui(QWidget):
 
             slider.setFont(font)
             slider.setRange(0, RANGE)
-            slider.setValue(RANGE/2)
+            slider.setValue(RANGE / 2)
 
             joint_layout.addWidget(slider)
 
             self.joint_map[name] = {'slidervalue': 0, 'display': display,
                                     'slider': slider, 'joint': joint}
             # Connect to the signal provided by QSignal
-            slider.valueChanged.connect(lambda event,name=name: self.onValueChangedOne(name))
+            slider.valueChanged.connect(lambda event, name = name: self.onValueChangedOne(name))
 
             sliders.append(joint_layout)
 
@@ -438,8 +458,8 @@ class JointStatePublisherGui(QWidget):
             self.gridlayout.addLayout(item, *pos)
 
     def generate_grid_positions(self, num_items, num_rows):
-        if num_rows==0:
-          return []
+        if num_rows == 0:
+            return []
         positions = [(y, x) for x in range(int((math.ceil(float(num_items) / num_rows)))) for y in range(num_rows)]
         positions = positions[:num_items]
         return positions
@@ -464,7 +484,7 @@ class JointStatePublisherGui(QWidget):
 
     def sliderToValue(self, slider, joint):
         pctvalue = slider / float(RANGE)
-        return joint['min'] + (joint['max']-joint['min']) * pctvalue
+        return joint['min'] + (joint['max'] - joint['min']) * pctvalue
 
 
 if __name__ == '__main__':
