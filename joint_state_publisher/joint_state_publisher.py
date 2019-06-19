@@ -276,6 +276,7 @@ class JointStatePublisher():
             if msg.name or msg.position or msg.velocity or msg.effort:
                 # Only publish non-empty messages
                 self.pub.publish(msg)
+            rclpy.spin_once(self.node, timeout_sec=0)
             time.sleep(1.0 / hz)
 
     def update(self, delta):
