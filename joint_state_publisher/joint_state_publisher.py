@@ -211,6 +211,7 @@ class JointStatePublisher():
 
         # Publish Joint States
         while rclpy.ok():
+            start_time = time.time()
             msg = sensor_msgs.msg.JointState()
             msg.header.stamp = clock.now().to_msg()
 
@@ -276,7 +277,16 @@ class JointStatePublisher():
             if msg.name or msg.position or msg.velocity or msg.effort:
                 # Only publish non-empty messages
                 self.pub.publish(msg)
-            time.sleep(1.0 / hz)
+
+            # Spin to make sure we service any subscriptions
+            rclpy.spin_once(self.node, timeout_sec=0)
+
+            elapsed = time.time() - start_time
+
+            # TODO(clalancette): Use rclpy.Rate once it is available
+            # We want to run at 1.0/hz, but make sure to take into account the
+            # amount of time we spent in the loop
+            time.sleep((1.0 / hz) - elapsed)
 
     def update(self, delta):
         for name, joint in self.free_joints.iteritems():
