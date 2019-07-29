@@ -12,7 +12,7 @@ import xml.dom.minidom
 
 # ROS 2 imports
 import rclpy
-import rclpy.parameter
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import sensor_msgs.msg
 
 # Python QT Binding imports
@@ -151,7 +151,8 @@ class JointStatePublisher():
         else:
             self.init_urdf(robot)
 
-        use_gui = self.get_param('use_gui')
+        use_gui = self.get_param('use_gui');
+#        use_gui = self.node.get_parameter_or('use_gui', Parameter('use_gui', Parameter.Type.BOOL, False))
 
         if use_gui:
             num_rows = self.get_param('num_rows')
@@ -492,19 +493,18 @@ def main(input_args=None):
     with open(parsed_args.urdf_file, 'r') as infp:
         urdf = infp.read()
 
-    initial_parameters=[
-        rclpy.parameter.Parameter('num_rows', rclpy.parameter.Parameter.Type.INTEGER, 0),
-        rclpy.parameter.Parameter('publish_default_efforts', rclpy.parameter.Parameter.Type.BOOL, False),
-        rclpy.parameter.Parameter('publish_default_positions', rclpy.parameter.Parameter.Type.BOOL, True),
-        rclpy.parameter.Parameter('publish_default_velocities', rclpy.parameter.Parameter.Type.BOOL, False),
-        rclpy.parameter.Parameter('rate', rclpy.parameter.Parameter.Type.INTEGER, 10),  # 10hz
-        rclpy.parameter.Parameter('source_list', rclpy.parameter.Parameter.Type.STRING_ARRAY, []),
-        rclpy.parameter.Parameter('use_gui', rclpy.parameter.Parameter.Type.BOOL, False),
-        rclpy.parameter.Parameter('use_mimic_tags', rclpy.parameter.Parameter.Type.BOOL, True),
-        rclpy.parameter.Parameter('use_smallest_joint_limits', rclpy.parameter.Parameter.Type.BOOL, True),
-    ]
+    node = rclpy.create_node('joint_state_publisher')
 
-    node = rclpy.create_node('joint_state_publisher', initial_parameters=initial_parameters)
+    node.declare_parameter('num_rows', 0, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
+    node.declare_parameter('publish_default_efforts', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    node.declare_parameter('publish_default_positions', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    node.declare_parameter('publish_default_velocities', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    node.declare_parameter('rate', 10, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
+    node.declare_parameter('source_list', [], ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY))
+    node.declare_parameter('use_gui', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    node.declare_parameter('use_mimic_tags', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    node.declare_parameter('use_smallest_joint_limits', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+
     jsp = JointStatePublisher(node, urdf)
 
     if jsp.gui is None:
