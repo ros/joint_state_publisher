@@ -286,7 +286,8 @@ class JointStatePublisher():
             # TODO(clalancette): Use rclpy.Rate once it is available
             # We want to run at 1.0/hz, but make sure to take into account the
             # amount of time we spent in the loop
-            time.sleep((1.0 / hz) - elapsed)
+            sleep_time = (1.0 / hz) - elapsed
+            time.sleep(max(sleep_time, 0.0))
 
     def update(self, delta):
         for name, joint in self.free_joints.iteritems():
