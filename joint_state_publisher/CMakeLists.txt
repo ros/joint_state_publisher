@@ -16,4 +16,10 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest(test/test_multi_joints_urdf.launch)
   add_rostest(test/test_multi_joints_collada.launch)
   add_rostest(test/test_64_joint_robot.launch)
+
+  # Force CMake to find python again in case it was called before to find python 2
+  unset(PYTHON_EXECUTABLE CACHE)
+  unset(PYTHONINTERP_FOUND CACHE)
+  find_package(PythonInterp 3 REQUIRED)
+  add_test(NAME test_py3_syntax COMMAND "${PYTHON_EXECUTABLE}" "-m" "flake8" "--select" "E999")
 endif()
