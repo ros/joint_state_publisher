@@ -157,7 +157,7 @@ class JointStatePublisher():
         if use_gui:
             num_rows = get_param("num_rows", 0)
             self.app = QApplication(sys.argv)
-            self.gui = JointStatePublisherGui("Joint State Publisher", self, num_rows)
+            self.gui = JointStatePublisherGui(rospy.get_name()[1:], self, num_rows)
             self.gui.show()
         else:
             self.gui = None
@@ -303,6 +303,7 @@ class JointStatePublisherGui(QWidget):
 
     def __init__(self, title, jsp, num_rows=0):
         super(JointStatePublisherGui, self).__init__()
+        self.setWindowTitle(title)
         self.jsp = jsp
         self.joint_map = {}
         self.vlayout = QVBoxLayout(self)
