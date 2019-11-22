@@ -132,7 +132,7 @@ class JointStatePublisher():
                 self.free_joints[name] = joint
 
     def __init__(self):
-        description = get_param('robot_description')
+        description = get_param('robot_description').encode('utf-8')
 
         self.free_joints = {}
         self.joint_list = [] # for maintaining the original order of the joints
