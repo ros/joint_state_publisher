@@ -12,7 +12,7 @@ import xml.dom.minidom
 
 # ROS 2 imports
 import rclpy
-import rclpy.parameter
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import sensor_msgs.msg
 
 # Python QT Binding imports
@@ -36,10 +36,8 @@ RANGE = 10000
 
 
 class JointStatePublisher():
-    def get_param(self, name, value=None):
+    def get_param(self, name):
         param = self.node.get_parameter(name)
-        if param.type_ == rclpy.parameter.Parameter.Type.NOT_SET:
-            return value
         return param.value
 
     def init_collada(self, robot):
@@ -136,15 +134,16 @@ class JointStatePublisher():
         self.node = node
         self.free_joints = {}
         self.joint_list = [] # for maintaining the original order of the joints
-        self.dependent_joints = self.get_param('dependent_joints', {})
-        self.use_mimic = self.get_param('use_mimic_tags', True)
-        self.use_small = self.get_param('use_smallest_joint_limits', True)
 
-        self.zeros = self.get_param('zeros')
+        self.dependent_joints = {} # TODO: Set when rclpy supports map parameters
+        self.use_mimic = self.get_param('use_mimic_tags')
+        self.use_small = self.get_param('use_smallest_joint_limits')
 
-        self.pub_def_positions = self.get_param('publish_default_positions', True)
-        self.pub_def_vels = self.get_param('publish_default_velocities', False)
-        self.pub_def_efforts = self.get_param('publish_default_efforts', False)
+        self.zeros = None # TODO: Set when rclpy supports map parameters
+
+        self.pub_def_positions = self.get_param('publish_default_positions')
+        self.pub_def_vels = self.get_param('publish_default_velocities')
+        self.pub_def_efforts = self.get_param('publish_default_efforts')
 
         robot = xml.dom.minidom.parseString(description)
         if robot.getElementsByTagName('COLLADA'):
@@ -152,17 +151,18 @@ class JointStatePublisher():
         else:
             self.init_urdf(robot)
 
-        use_gui = self.get_param('use_gui', False)
+        use_gui = self.get_param('use_gui');
+#        use_gui = self.node.get_parameter_or('use_gui', Parameter('use_gui', Parameter.Type.BOOL, False))
 
         if use_gui:
-            num_rows = self.get_param('num_rows', 0)
+            num_rows = self.get_param('num_rows')
             self.app = QApplication(sys.argv)
             self.gui = JointStatePublisherGui("Joint State Publisher", self, num_rows)
             self.gui.show()
         else:
             self.gui = None
 
-        source_list = self.get_param('source_list', [])
+        source_list = self.get_param('source_list')
         self.sources = []
         for source in source_list:
             self.sources.append(self.node.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb))
@@ -203,7 +203,7 @@ class JointStatePublisher():
             self.gui.sliderUpdateTrigger.emit()
 
     def loop(self):
-        hz = self.get_param('rate', 10)  # 10hz
+        hz = self.get_param('rate')
 
         delta = 0.0
 
@@ -494,6 +494,17 @@ def main(input_args=None):
         urdf = infp.read()
 
     node = rclpy.create_node('joint_state_publisher')
+
+    node.declare_parameter('num_rows', 0, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
+    node.declare_parameter('publish_default_efforts', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    node.declare_parameter('publish_default_positions', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    node.declare_parameter('publish_default_velocities', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    node.declare_parameter('rate', 10, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
+    node.declare_parameter('source_list', [], ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY))
+    node.declare_parameter('use_gui', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    node.declare_parameter('use_mimic_tags', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    node.declare_parameter('use_smallest_joint_limits', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+
     jsp = JointStatePublisher(node, urdf)
 
     if jsp.gui is None:
