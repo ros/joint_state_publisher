@@ -167,7 +167,7 @@ class JointStatePublisher():
         for source in source_list:
             self.sources.append(self.node.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb))
 
-        self.pub = self.node.create_publisher(sensor_msgs.msg.JointState, 'joint_states')
+        self.pub = self.node.create_publisher(sensor_msgs.msg.JointState, 'joint_states', 10)
 
     def source_cb(self, msg):
         for i in range(len(msg.name)):
@@ -493,7 +493,7 @@ def main(input_args=None):
     with open(parsed_args.urdf_file, 'r') as infp:
         urdf = infp.read()
 
-    node = rclpy.create_node('joint_state_publisher')
+    node = rclpy.create_node('joint_state_publisher', allow_undeclared_parameters=True)
 
     node.declare_parameter('num_rows', 0, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
     node.declare_parameter('publish_default_efforts', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
