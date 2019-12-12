@@ -165,7 +165,7 @@ class JointStatePublisher():
         source_list = self.get_param('source_list')
         self.sources = []
         for source in source_list:
-            self.sources.append(self.node.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb))
+            self.sources.append(self.node.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb, 10))
 
         self.pub = self.node.create_publisher(sensor_msgs.msg.JointState, 'joint_states', 10)
 
@@ -286,7 +286,8 @@ class JointStatePublisher():
             # TODO(clalancette): Use rclpy.Rate once it is available
             # We want to run at 1.0/hz, but make sure to take into account the
             # amount of time we spent in the loop
-            time.sleep((1.0 / hz) - elapsed)
+            sleep_time = (1.0 / hz) - elapsed
+            time.sleep(max(sleep_time, 0.0))
 
     def update(self, delta):
         for name, joint in self.free_joints.iteritems():
