@@ -162,6 +162,9 @@ class JointStatePublisher():
 
         self.use_gui = self.get_param('use_gui');
 
+        if self.use_gui and not self.pub_def_positions:
+            raise Exception('Cannot have use_gui enabled and publish_default_positions disabled')
+
         if self.use_gui:
             num_rows = self.get_param('num_rows')
             self.app = QApplication(sys.argv)

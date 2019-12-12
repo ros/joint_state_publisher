@@ -19,11 +19,11 @@ Subscribed Topics
 Parameters
 ----------
 * `rate` (int) - The rate at which to publish updates to the `/joint_states` topic.  Defaults to 10.
-* `publish_default_positions` (bool) - Whether to publish a default position for each movable joint to the `/joint_states` topic.  Defaults to True.
+* `publish_default_positions` (bool) - Whether to publish a default position for each movable joint to the `/joint_states` topic.  If False, `use_gui` must also be False.  Defaults to True.
 * `publish_default_velocities` (bool) - Whether to publish a default velocity for each movable joint to the `/joint_states` topic.  Defaults to False.
 * `publish_default_efforts` (bool) - Whether to publish a default effort for each movable joint to the `/joint_states` topic.  Defaults to False.
 * `use_mimic_tags` (bool) - Whether to honor `<mimic>` tags in the URDF.  Defaults to True.
 * `use_smallest_joint_limits` (bool) - Whether to honor `<safety_controller>` tags in the URDF.  Defaults to True.
 * `source_list` (array of strings) - Each string in this array represents a topic name.  For each string, create a subscription to the named topic of type `sensor_msgs/JointStates`.  Publication to that topic will update the joints named in the message.  Defaults to an empty array.
-* `use_gui` (bool) - If True, a GUI with sliders to control the movable joints will be launched when the node is launched.  Defaults to False.
+* `use_gui` (bool) - If True, a GUI with sliders to control the movable joints will be launched when the node is launched.  If True, `publish_default_positions` must also be True.  Defaults to False.
 * `num_rows` (int) - The number of rows to show in the GUI.  If 0 (the default), uses the number of movable joints as the number of rows.  Only used if `use_gui` is True.
