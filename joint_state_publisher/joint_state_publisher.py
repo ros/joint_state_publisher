@@ -14,6 +14,7 @@ import xml.dom.minidom
 import rclpy
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import sensor_msgs.msg
+import std_msgs.msg
 
 # Python QT Binding imports
 from python_qt_binding.QtCore import pyqtSlot
@@ -130,8 +131,20 @@ class JointStatePublisher():
                     joint['continuous'] = True
                 self.free_joints[name] = joint
 
-    def __init__(self, node, description):
+    def configure_robot(self, description):
+        self.node.get_logger().info('Got description, configuring robot')
+        robot = xml.dom.minidom.parseString(description)
+        if robot.getElementsByTagName('COLLADA'):
+            self.init_collada(robot)
+        else:
+            self.init_urdf(robot)
+
+        if self.use_gui:
+            self.gui.initialize.emit()
+
+    def __init__(self, node, urdf_file):
         self.node = node
+
         self.free_joints = {}
         self.joint_list = [] # for maintaining the original order of the joints
 
@@ -147,22 +160,28 @@ class JointStatePublisher():
         self.pub_def_vels = self.get_param('publish_default_velocities')
         self.pub_def_efforts = self.get_param('publish_default_efforts')
 
-        robot = xml.dom.minidom.parseString(description)
-        if robot.getElementsByTagName('COLLADA'):
-            self.init_collada(robot)
-        else:
-            self.init_urdf(robot)
+        self.use_gui = self.get_param('use_gui');
 
-        use_gui = self.get_param('use_gui');
-#        use_gui = self.node.get_parameter_or('use_gui', Parameter('use_gui', Parameter.Type.BOOL, False))
-
-        if use_gui:
+        if self.use_gui:
             num_rows = self.get_param('num_rows')
             self.app = QApplication(sys.argv)
             self.gui = JointStatePublisherGui("Joint State Publisher", self, num_rows)
             self.gui.show()
         else:
             self.gui = None
+
+        if urdf_file is not None:
+            # If we were given a URDF file on the command-line, use that.
+            with open(urdf_file, 'r') as infp:
+                description = infp.read()
+            self.configure_robot(description)
+        else:
+            # Otherwise, subscribe to the '/robot_description' topic and wait
+            # for a callback there
+            self.node.get_logger().info('Waiting for robot_description to be published on the /robot_description topic...')
+            self.node.create_subscription(std_msgs.msg.String, '/robot_description',
+                                          lambda msg: self.configure_robot(msg.data),
+                                          rclpy.qos.QoSProfile(depth=10, durability=rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL))
 
         source_list = self.get_param('source_list')
         self.sources = []
@@ -311,6 +330,7 @@ class JointStatePublisher():
 
 class JointStatePublisherGui(QWidget):
     sliderUpdateTrigger = Signal()
+    initialize = Signal()
 
     def __init__(self, title, jsp, num_rows=0):
         super(JointStatePublisherGui, self).__init__()
@@ -322,7 +342,11 @@ class JointStatePublisherGui(QWidget):
         self.gridlayout = QGridLayout()
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        # Determine number of rows to be used in grid
+        self.num_rows = num_rows
+        self.initialize.connect(self.initialize_sliders)
 
+    def initialize_sliders(self):
         font = QFont("Helvetica", 9, QFont.Bold)
 
         ### Generate sliders ###
@@ -364,8 +388,6 @@ class JointStatePublisherGui(QWidget):
 
             sliders.append(joint_layout)
 
-        # Determine number of rows to be used in grid
-        self.num_rows = num_rows
         # if desired num of rows wasn't set, default behaviour is a vertical layout
         if self.num_rows == 0:
             self.num_rows = len(sliders)  # equals VBoxLayout
@@ -492,13 +514,11 @@ def main(input_args=None):
     # Strip off the ROS 2-specific command-line arguments
     stripped_args = rclpy.utilities.remove_ros_args(args=input_args)
     parser = argparse.ArgumentParser()
-    parser.add_argument('urdf_file', help='URDF file to use')
+    parser.add_argument('urdf_file', help='URDF file to use', nargs='?', default=None)
 
     # Parse the remaining arguments, noting that the passed-in args must *not*
     # contain the name of the program.
     parsed_args = parser.parse_args(args=stripped_args[1:])
-    with open(parsed_args.urdf_file, 'r') as infp:
-        urdf = infp.read()
 
     node = rclpy.create_node('joint_state_publisher', allow_undeclared_parameters=True)
 
@@ -512,9 +532,9 @@ def main(input_args=None):
     node.declare_parameter('use_mimic_tags', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
     node.declare_parameter('use_smallest_joint_limits', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
 
-    jsp = JointStatePublisher(node, urdf)
+    jsp = JointStatePublisher(node, parsed_args.urdf_file)
 
-    if jsp.gui is None:
+    if not jsp.use_gui:
         jsp.loop()
     else:
         Thread(target=jsp.loop).start()
