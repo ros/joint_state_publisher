@@ -150,11 +150,11 @@ class JointStatePublisher():
 
         self.running = True  # Will be set to False by the Qt window to quit the main loop
 
-        self.dependent_joints = {} # TODO: Set when rclpy supports map parameters
+        self.dependent_joints = {}  # TODO: Set when rclpy supports map parameters
         self.use_mimic = self.get_param('use_mimic_tags')
         self.use_small = self.get_param('use_smallest_joint_limits')
 
-        self.zeros = None # TODO: Set when rclpy supports map parameters
+        self.zeros = {}  # TODO: Set when rclpy supports map parameters
 
         self.pub_def_positions = self.get_param('publish_default_positions')
         self.pub_def_vels = self.get_param('publish_default_velocities')
