@@ -165,7 +165,7 @@ class JointStatePublisher():
         source_list = self.get_param('source_list')
         self.sources = []
         for source in source_list:
-            self.sources.append(self.node.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb))
+            self.sources.append(self.node.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb, 10))
 
         self.pub = self.node.create_publisher(sensor_msgs.msg.JointState, 'joint_states', 10)
 
