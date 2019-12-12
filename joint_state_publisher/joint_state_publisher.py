@@ -51,14 +51,14 @@ class JointStatePublisher():
                 if child.getElementsByTagName('revolute'):
                     joint = child.getElementsByTagName('revolute')[0]
                 else:
-                    self.node.get_logger().warn("Unknown joint type %s", child)
+                    self.node.get_logger().warn('Unknown joint type %s', child)
                     continue
 
                 if joint:
                     limit = joint.getElementsByTagName('limits')[0]
                     minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
                     maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
-                if minval == maxval:  # this is fixed joint
+                if minval == maxval:  # this is a fixed joint
                     continue
 
                 self.joint_list.append(name)
@@ -86,7 +86,7 @@ class JointStatePublisher():
                         minval = float(limit.getAttribute('lower'))
                         maxval = float(limit.getAttribute('upper'))
                     except:
-                        self.node.get_logger().warn("%s is not fixed, nor continuous, but limits are not specified!" % name)
+                        self.node.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
                         continue
 
                 safety_tags = child.getElementsByTagName('safety_controller')
@@ -165,7 +165,7 @@ class JointStatePublisher():
         if self.use_gui:
             num_rows = self.get_param('num_rows')
             self.app = QApplication(sys.argv)
-            self.gui = JointStatePublisherGui("Joint State Publisher", self, num_rows)
+            self.gui = JointStatePublisherGui('Joint State Publisher', self, num_rows)
             self.gui.show()
         else:
             self.gui = None
@@ -278,8 +278,8 @@ class JointStatePublisher():
                     recursive_mimic_chain_joints = [name]
                     while parent in self.dependent_joints:
                         if parent in recursive_mimic_chain_joints:
-                            error_message = "Found an infinite recursive mimic chain"
-                            self.node.get_logger().error("%s: [%s, %s]", error_message, ', '.join(recursive_mimic_chain_joints), parent)
+                            error_message = 'Found an infinite recursive mimic chain'
+                            self.node.get_logger().error('%s: [%s, %s]', error_message, ', '.join(recursive_mimic_chain_joints), parent)
                             sys.exit(-1)
                         recursive_mimic_chain_joints.append(parent)
                         param = self.dependent_joints[parent]
@@ -347,7 +347,7 @@ class JointStatePublisherGui(QWidget):
         self.initialize.connect(self.initialize_sliders)
 
     def initialize_sliders(self):
-        font = QFont("Helvetica", 9, QFont.Bold)
+        font = QFont('Helvetica', 9, QFont.Bold)
 
         ### Generate sliders ###
         sliders = []
@@ -365,7 +365,7 @@ class JointStatePublisherGui(QWidget):
             label = QLabel(name)
             label.setFont(font)
             row_layout.addWidget(label)
-            display = QLineEdit("0.00")
+            display = QLineEdit('0.00')
             display.setAlignment(Qt.AlignRight)
             display.setFont(font)
             display.setReadOnly(True)
@@ -431,7 +431,7 @@ class JointStatePublisherGui(QWidget):
         joint_info['slidervalue'] = joint_info['slider'].value()
         joint = joint_info['joint']
         joint['position'] = self.sliderToValue(joint_info['slidervalue'], joint)
-        joint_info['display'].setText("%.2f" % joint['position'])
+        joint_info['display'].setText('%.2f' % joint['position'])
 
     @pyqtSlot()
     def updateSliders(self):
@@ -448,7 +448,7 @@ class JointStatePublisherGui(QWidget):
         self.center()
 
     def center(self):
-        self.jsp.node.get_logger().info("Centering")
+        self.jsp.node.get_logger().info('Centering')
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
             joint_info['slider'].setValue(self.valueToSlider(joint['zero'], joint))
@@ -482,7 +482,7 @@ class JointStatePublisherGui(QWidget):
         self.randomize()
 
     def randomize(self):
-        self.jsp.node.get_logger().info("Randomizing")
+        self.jsp.node.get_logger().info('Randomizing')
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
             joint_info['slider'].setValue(
