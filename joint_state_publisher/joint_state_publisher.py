@@ -20,6 +20,7 @@ import std_msgs.msg
 from python_qt_binding.QtCore import pyqtSlot
 from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtCore import Signal
+from python_qt_binding.QtGui import QDoubleValidator
 from python_qt_binding.QtGui import QFont
 from python_qt_binding.QtWidgets import QApplication
 from python_qt_binding.QtWidgets import QHBoxLayout
@@ -384,8 +385,7 @@ class JointStatePublisherGui(QWidget):
 
             joint_layout.addWidget(slider)
 
-            self.joint_map[name] = {'slidervalue': 0, 'display': display,
-                                    'slider': slider, 'joint': joint}
+            self.joint_map[name] = {'display': display, 'slider': slider, 'joint': joint}
             # Connect to the signal provided by QSignal
             slider.valueChanged.connect(lambda event,name=name: self.onSliderValueChangedOne(name))
 
@@ -431,9 +431,9 @@ class JointStatePublisherGui(QWidget):
     def onSliderValueChangedOne(self, name):
         # A slider value was changed, but we need to change the joint_info metadata.
         joint_info = self.joint_map[name]
-        joint_info['slidervalue'] = joint_info['slider'].value()
+        slidervalue = joint_info['slider'].value()
         joint = joint_info['joint']
-        joint['position'] = self.sliderToValue(joint_info['slidervalue'], joint)
+        joint['position'] = self.sliderToValue(slidervalue, joint)
         joint_info['display'].setText('%.2f' % joint['position'])
 
     @pyqtSlot()
@@ -443,9 +443,8 @@ class JointStatePublisherGui(QWidget):
     def update_sliders(self):
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
-            joint_info['slidervalue'] = self.valueToSlider(joint['position'],
-                                                           joint)
-            joint_info['slider'].setValue(joint_info['slidervalue'])
+            slidervalue = self.valueToSlider(joint['position'], joint)
+            joint_info['slider'].setValue(slidervalue)
 
     def center_event(self, event):
         self.center()
