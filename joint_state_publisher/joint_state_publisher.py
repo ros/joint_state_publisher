@@ -387,7 +387,7 @@ class JointStatePublisherGui(QWidget):
             self.joint_map[name] = {'slidervalue': 0, 'display': display,
                                     'slider': slider, 'joint': joint}
             # Connect to the signal provided by QSignal
-            slider.valueChanged.connect(lambda event,name=name: self.onValueChangedOne(name))
+            slider.valueChanged.connect(lambda event,name=name: self.onSliderValueChangedOne(name))
 
             sliders.append(joint_layout)
 
@@ -403,10 +403,10 @@ class JointStatePublisherGui(QWidget):
         self.center()
 
         # Synchronize slider and displayed value
-        self.sliderUpdate(None)
+        self.update_sliders()
 
         # Set up a signal for updating the sliders based on external joint info
-        self.sliderUpdateTrigger.connect(self.updateSliders)
+        self.sliderUpdateTrigger.connect(self.updateSlidersEvent)
 
         self.scrollable.setLayout(self.gridlayout)
         self.scroll.setWidget(self.scrollable)
@@ -428,7 +428,7 @@ class JointStatePublisherGui(QWidget):
         self.vlayout.addWidget(self.maxrowsupdown)
         self.setLayout(self.vlayout)
 
-    def onValueChangedOne(self, name):
+    def onSliderValueChangedOne(self, name):
         # A slider value was changed, but we need to change the joint_info metadata.
         joint_info = self.joint_map[name]
         joint_info['slidervalue'] = joint_info['slider'].value()
@@ -437,7 +437,7 @@ class JointStatePublisherGui(QWidget):
         joint_info['display'].setText('%.2f' % joint['position'])
 
     @pyqtSlot()
-    def updateSliders(self):
+    def updateSlidersEvent(self):
         self.update_sliders()
 
     def update_sliders(self):
@@ -490,11 +490,6 @@ class JointStatePublisherGui(QWidget):
             joint = joint_info['joint']
             joint_info['slider'].setValue(
                     self.valueToSlider(random.uniform(joint['min'], joint['max']), joint))
-
-    def sliderUpdate(self, event):
-        for name, joint_info in self.joint_map.items():
-            joint_info['slidervalue'] = joint_info['slider'].value()
-        self.update_sliders()
 
     def valueToSlider(self, value, joint):
         return (value - joint['min']) * float(RANGE) / (joint['max'] - joint['min'])
