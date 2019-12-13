@@ -143,6 +143,36 @@ class JointStatePublisher():
         if self.use_gui:
             self.gui.initialize.emit()
 
+    def parse_dependent_joints(self):
+        dj = {}
+        dependent_joints = self.node.get_parameters_by_prefix('dependent_joints')
+        # get_parameters_by_prefix returned a dictionary of keynames like
+        # 'head.parent', 'head.offset', etc. that map to rclpy Parameter values.
+        # The rest of the code assumes that the dependent_joints dictionary is
+        # a map of name -> dict['parent': parent, factor: factor, offset: offset],
+        # where both factor and offset are optional.  Thus we parse the values we
+        # got into that structure.
+        for name,param in dependent_joints.items():
+            # First split on the dots; there should be one and exactly one dot
+            split = name.split('.')
+            if len(split) != 2:
+                raise Exception("Invalid dependent_joint name '%s'" % (name))
+            newkey = split[0]
+            newvalue = split[1]
+            if newvalue not in ['parent', 'factor', 'offset']:
+                raise Exception("Invalid dependent_joint name '%s'" % (newvalue))
+            if newkey in dj:
+                dj[newkey].update({newvalue: param.value})
+            else:
+                dj.update({newkey: {newvalue: param.value}})
+
+        # Now ensure that there is at least a 'parent' in all keys
+        for name,outdict in dj.items():
+            if outdict.get('parent', None) is None:
+                raise Exception('All dependent_joints must at least have a parent')
+
+        return dj
+
     def __init__(self, node, urdf_file):
         self.node = node
 
@@ -151,11 +181,15 @@ class JointStatePublisher():
 
         self.running = True  # Will be set to False by the Qt window to quit the main loop
 
-        self.dependent_joints = {}  # TODO: Set when rclpy supports map parameters
+        self.dependent_joints = self.parse_dependent_joints()
+
         self.use_mimic = self.get_param('use_mimic_tags')
         self.use_small = self.get_param('use_smallest_joint_limits')
 
-        self.zeros = {}  # TODO: Set when rclpy supports map parameters
+        # This returns a map of name -> Parameter structures, but self.zeros is
+        # expected to be a list of name -> float; fix that here.
+        zeros = self.node.get_parameters_by_prefix('zeros')
+        self.zeros = {k:v.value for (k, v) in zeros.items()}
 
         self.pub_def_positions = self.get_param('publish_default_positions')
         self.pub_def_vels = self.get_param('publish_default_velocities')
@@ -501,6 +535,21 @@ class JointStatePublisherGui(QWidget):
         self.jsp.running = False
 
 
+def declare_ros_parameter(node, name, default, descriptor):
+    # When the automatically_declare_parameters_from_overrides parameter to
+    # rclpy.create_node() is True, then any parameters passed in on the
+    # command-line are automatically declared.  In that case, calling
+    # node.declare_parameter() will raise an exception.  However, in the case
+    # where a parameter is *not* overridden, we still want to declare it
+    # (so it shows up in "ros2 param list", for instance).  Thus we always do
+    # a declaration and just ignore ParameterAlreadyDeclaredException.
+
+    try:
+        node.declare_parameter(name, default, descriptor)
+    except rclpy.exceptions.ParameterAlreadyDeclaredException:
+        pass
+
+
 def main(input_args=None):
     if input_args is None:
         input_args = sys.argv
@@ -517,17 +566,22 @@ def main(input_args=None):
     # contain the name of the program.
     parsed_args = parser.parse_args(args=stripped_args[1:])
 
-    node = rclpy.create_node('joint_state_publisher', allow_undeclared_parameters=True)
+    node = rclpy.create_node('joint_state_publisher', allow_undeclared_parameters=True,
+                             automatically_declare_parameters_from_overrides=True)
 
-    node.declare_parameter('num_rows', 0, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
-    node.declare_parameter('publish_default_efforts', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
-    node.declare_parameter('publish_default_positions', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
-    node.declare_parameter('publish_default_velocities', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
-    node.declare_parameter('rate', 10, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
-    node.declare_parameter('source_list', [], ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY))
-    node.declare_parameter('use_gui', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
-    node.declare_parameter('use_mimic_tags', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
-    node.declare_parameter('use_smallest_joint_limits', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    declare_ros_parameter(node, 'num_rows', 0, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
+    declare_ros_parameter(node, 'publish_default_efforts', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    declare_ros_parameter(node, 'publish_default_positions', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    declare_ros_parameter(node, 'publish_default_velocities', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    declare_ros_parameter(node, 'rate', 10, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
+    declare_ros_parameter(node, 'source_list', [], ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY))
+    declare_ros_parameter(node, 'use_gui', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    declare_ros_parameter(node, 'use_mimic_tags', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    declare_ros_parameter(node, 'use_smallest_joint_limits', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+    # In theory we would also declare 'dependent_joints' and 'zeros' here.
+    # Since rclpy doesn't support maps natively, though, we just end up
+    # letting 'automatically_declare_parameters_from_overrides' declare
+    # any parameters for us.
 
     jsp = JointStatePublisher(node, parsed_args.urdf_file)
 
