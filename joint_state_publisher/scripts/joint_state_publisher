@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+import rospy
+
+import joint_state_publisher
+
+if __name__ == '__main__':
+    try:
+        rospy.init_node('joint_state_publisher')
+        jsp = joint_state_publisher.JointStatePublisher()
+
+        jsp.loop()
+
+    except rospy.ROSInterruptException:
+        pass
