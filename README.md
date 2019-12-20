@@ -1,3 +1,6 @@
+# Added namespace support for /robot_description Subscribed
+
+
 # Joint State Publisher
 
 This contains a package for publishing `sensor_msgs/JointState` messages for a robot described with URDF.
