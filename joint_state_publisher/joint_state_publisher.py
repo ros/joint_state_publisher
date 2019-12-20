@@ -134,6 +134,7 @@ class JointStatePublisher():
 
     def configure_robot(self, description):
         self.node.get_logger().info('Got description, configuring robot')
+        self.node.get_logger().warn('Got description, configuring robot')
         robot = xml.dom.minidom.parseString(description)
         if robot.getElementsByTagName('COLLADA'):
             self.init_collada(robot)
@@ -216,8 +217,10 @@ class JointStatePublisher():
         else:
             # Otherwise, subscribe to the '/robot_description' topic and wait
             # for a callback there
-            self.node.get_logger().info('Waiting for robot_description to be published on the /robot_description topic...')
-            self.node.create_subscription(std_msgs.msg.String, '/robot_description',
+            ns = self.node.get_namespace()
+            self.node.get_logger().warn("Namespace: {}".format(ns))
+            self.node.get_logger().warn('Waiting for robot_description to be published on the ' + ns + '/robot_description topic...')
+            self.node.create_subscription(std_msgs.msg.String, ns+'/robot_description',
                                           lambda msg: self.configure_robot(msg.data),
                                           rclpy.qos.QoSProfile(depth=10, durability=rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL))
 
@@ -568,6 +571,11 @@ def main(input_args=None):
 
     node = rclpy.create_node('joint_state_publisher', allow_undeclared_parameters=True,
                              automatically_declare_parameters_from_overrides=True)
+
+    my_logger = node.get_logger()
+    my_logger.warn("Joint_space_publisher node created")
+    my_logger.warn('input_args: {}'.format(input_args))
+
 
     declare_ros_parameter(node, 'num_rows', 0, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
     declare_ros_parameter(node, 'publish_default_efforts', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
