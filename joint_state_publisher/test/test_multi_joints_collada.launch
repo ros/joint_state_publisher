@@ -11,5 +11,4 @@
     <param name="test_duration" value="10"/>
     <param name="wait_time" value="10"/>
   </test>
-
 </launch>

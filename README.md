@@ -3,8 +3,6 @@
 This contains a package for publishing `sensor_msgs/JointState` messages for a robot described with URDF.
 Given a URDF (either passed on the command-line or via the `/robot_description` topic), this node
 will continually publish default values for all of the movable joints in the URDF to the `/joint_states` topic.
-If the `use_gui` parameter is True, it will also launch a window where the values of the movable joints can be updated.
-In combination with `robot_state_publisher`, this can update the TF2 transforms for the robot on the fly.
 
 See the ROS wiki for additional API documentation and tutorials.
 

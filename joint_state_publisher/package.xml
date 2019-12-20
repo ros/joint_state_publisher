@@ -15,6 +15,7 @@
   <url type="bugtracker">https://github.com/ros/joint_state_publisher/issues</url>
 
   <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>python-catkin-pkg</buildtool_depend>
 
   <exec_depend>rospy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
