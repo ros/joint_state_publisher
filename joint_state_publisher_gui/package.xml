@@ -15,6 +15,7 @@
   <url type="bugtracker">https://github.com/ros/joint_state_publisher/issues</url>
 
   <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>python-catkin-pkg</buildtool_depend>
 
   <exec_depend>joint_state_publisher</exec_depend>
   <exec_depend>python_qt_binding</exec_depend>
