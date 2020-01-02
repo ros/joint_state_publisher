@@ -144,15 +144,6 @@ class JointStatePublisher():
     def __init__(self):
         description = get_param('robot_description')
 
-        use_gui = get_param('use_gui')
-        if use_gui is not None:
-            rospy.logerr('GUI is no longer supported by this package; install and run joint_state_publisher_gui')
-            sys.exit(1)
-
-        num_rows = get_param('num_rows')
-        if num_rows is not None:
-            rospy.logerr('num_rows cannot be specified without use_gui')
-
         self.free_joints = {}
         self.joint_list = [] # for maintaining the original order of the joints
         self.dependent_joints = get_param("dependent_joints", {})

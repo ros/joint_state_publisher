@@ -1,7 +1,7 @@
 # Joint State Publisher
 
 This contains a package for publishing `sensor_msgs/JointState` messages for a robot described with URDF.
-Given a URDF (either passed on the command-line or via the `/robot_description` topic), this node
+Given a URDF in the `robot_description` parameter on the parameter server, this node
 will continually publish default values for all of the movable joints in the URDF to the `/joint_states` topic.
 
 See the ROS wiki for additional API documentation and tutorials.
@@ -17,7 +17,6 @@ Published Topics
 
 Subscribed Topics
 -----------------
-* (optional) `/robot_description` (`std_msgs/String`) - If no URDF is given on the command-line, then this node will listen on the `/robot_description` topic for the URDF to be published.  Once it has been received at least once, this node will start to publish joint values to `/joint_states`.
 * (optional) `/any_topic` (`sensor_msgs/JointState`) - If the `sources_list` parameter is not empty (see Parameters below), then every named topic in this parameter will be subscribed to for joint state updates.  Do *not* add the default `/joint_states` topic to this list, as it will end up in an endless loop!
 
 Parameters
@@ -31,3 +30,5 @@ Parameters
 * `source_list` (array of strings) - Each string in this array represents a topic name.  For each string, create a subscription to the named topic of type `sensor_msgs/JointStates`.  Publication to that topic will update the joints named in the message.  Defaults to an empty array.
 * `zeros` (dictionary of string -> float) - A dictionary of joint_names to initial starting values for the joint.  Defaults to an empty dictionary, in which case 0.0 is assumed as the zero for all joints.
 * `dependent_joints` (dictionary of string -> dictionary of 'parent', 'factor', 'offset') - A dictionary of joint_names to the joints that they mimic; compare to the '<mimic>' tag in URDF.  A joint listed here will mimic the movements of the 'parent' joint, subject to the 'factor' and 'offset' provided.  The 'parent' name must be provided, while the 'factor' and 'offset' parameters are optional (they default to 1.0 and 0.0, respectively).  Defaults to the empty dictionary, in which case only joints that are marked as '<mimic>' in the URDF are mimiced.
+* `use_gui` (bool) - Deprecated option to show a GUI useful for manipulating joints when launching the joint_state_publisher.  Defaults to False.  Will be removed in Noetic in favor of running `joint_state_publisher_gui` instead.
+* `num_rows` (int) - Deprecated option to control the number of rows shown in the GUI when `use_gui` is set to true.  Defaults to the number of joints.  Will be removed in Noetic.
