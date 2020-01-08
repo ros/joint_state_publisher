@@ -167,6 +167,11 @@ class JointStatePublisher():
         for source in source_list:
             self.sources.append(rospy.Subscriber(source, sensor_msgs.msg.JointState, self.source_cb))
 
+        # The source_update_cb will be called at the end of self.source_cb.
+        # The main purpose it to allow external observes (such as the
+        # joint_state_publisher_gui) to be notified when things are updated.
+        self.source_update_cb = None
+
         self.pub = rospy.Publisher('joint_states', sensor_msgs.msg.JointState, queue_size=5)
 
     def source_cb(self, msg):
@@ -195,6 +200,12 @@ class JointStatePublisher():
                 joint['velocity'] = velocity
             if effort is not None:
                 joint['effort'] = effort
+
+        if self.source_update_cb is not None:
+            self.source_update_cb()
+
+    def set_source_update_cb(self, user_cb):
+        self.source_update_cb = user_cb
 
     def loop(self):
         hz = get_param("rate", 10)  # 10hz

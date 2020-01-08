@@ -35,6 +35,8 @@ class JointStatePublisherGui(QWidget):
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
 
+        self.jsp.set_source_update_cb(self.source_update_cb)
+
         font = QFont("Helvetica", 9, QFont.Bold)
 
         ### Generate sliders ###
@@ -114,6 +116,9 @@ class JointStatePublisherGui(QWidget):
         self.maxrowsupdown.valueChanged.connect(self.reorggrid_event)
         self.vlayout.addWidget(self.maxrowsupdown)
         self.setLayout(self.vlayout)
+
+    def source_update_cb(self):
+        self.sliderUpdateTrigger.emit()
 
     def onValueChangedOne(self, name):
         # A slider value was changed, but we need to change the joint_info metadata.
