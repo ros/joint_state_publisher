@@ -30,10 +30,14 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+import argparse
 import math
 import random
+import signal
+import sys
+import threading
 
-import rospy
+import rclpy
 
 from python_qt_binding.QtCore import pyqtSlot
 from python_qt_binding.QtCore import Qt
@@ -51,24 +55,31 @@ from python_qt_binding.QtWidgets import QScrollArea
 from python_qt_binding.QtWidgets import QSpinBox
 from python_qt_binding.QtWidgets import QWidget
 
+from joint_state_publisher.joint_state_publisher import JointStatePublisher
+
 RANGE = 10000
 
 
 class JointStatePublisherGui(QWidget):
     sliderUpdateTrigger = Signal()
+    initialize = Signal()
 
     def __init__(self, title, jsp, num_rows=0):
         super(JointStatePublisherGui, self).__init__()
+        self.setWindowTitle(title)
         self.jsp = jsp
+        self.jsp.set_source_update_cb(self.source_update_cb)
         self.joint_map = {}
         self.vlayout = QVBoxLayout(self)
         self.scrollable = QWidget()
         self.gridlayout = QGridLayout()
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)
+        # Determine number of rows to be used in grid
+        self.num_rows = num_rows
+        self.initialize.connect(self.initialize_sliders)
 
-        self.jsp.set_source_update_cb(self.source_update_cb)
-
+    def initialize_sliders(self):
         font = QFont("Helvetica", 9, QFont.Bold)
 
         ### Generate sliders ###
@@ -103,15 +114,12 @@ class JointStatePublisherGui(QWidget):
 
             joint_layout.addWidget(slider)
 
-            self.joint_map[name] = {'slidervalue': 0, 'display': display,
-                                    'slider': slider, 'joint': joint}
+            self.joint_map[name] = {'display': display, 'slider': slider, 'joint': joint}
             # Connect to the signal provided by QSignal
-            slider.valueChanged.connect(lambda event,name=name: self.onValueChangedOne(name))
+            slider.valueChanged.connect(lambda event,name=name: self.onSliderValueChangedOne(name))
 
             sliders.append(joint_layout)
 
-        # Determine number of rows to be used in grid
-        self.num_rows = num_rows
         # if desired num of rows wasn't set, default behaviour is a vertical layout
         if self.num_rows == 0:
             self.num_rows = len(sliders)  # equals VBoxLayout
@@ -124,7 +132,7 @@ class JointStatePublisherGui(QWidget):
         self.center()
 
         # Synchronize slider and displayed value
-        self.sliderUpdate(None)
+        self.update_sliders()
 
         # Set up a signal for updating the sliders based on external joint info
         self.sliderUpdateTrigger.connect(self.updateSliders)
@@ -149,15 +157,17 @@ class JointStatePublisherGui(QWidget):
         self.vlayout.addWidget(self.maxrowsupdown)
         self.setLayout(self.vlayout)
 
+        self.sliderUpdateTrigger.emit()
+
     def source_update_cb(self):
         self.sliderUpdateTrigger.emit()
 
-    def onValueChangedOne(self, name):
+    def onSliderValueChangedOne(self, name):
         # A slider value was changed, but we need to change the joint_info metadata.
         joint_info = self.joint_map[name]
-        joint_info['slidervalue'] = joint_info['slider'].value()
+        slidervalue = joint_info['slider'].value()
         joint = joint_info['joint']
-        joint['position'] = self.sliderToValue(joint_info['slidervalue'], joint)
+        joint['position'] = self.sliderToValue(slidervalue, joint)
         joint_info['display'].setText("%.2f" % joint['position'])
 
     @pyqtSlot()
@@ -167,15 +177,14 @@ class JointStatePublisherGui(QWidget):
     def update_sliders(self):
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
-            joint_info['slidervalue'] = self.valueToSlider(joint['position'],
-                                                           joint)
-            joint_info['slider'].setValue(joint_info['slidervalue'])
+            slidervalue = self.valueToSlider(joint['position'], joint)
+            joint_info['slider'].setValue(slidervalue)
 
     def center_event(self, event):
         self.center()
 
     def center(self):
-        rospy.loginfo("Centering")
+        self.jsp.node.get_logger().info("Centering")
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
             joint_info['slider'].setValue(self.valueToSlider(joint['zero'], joint))
@@ -209,16 +218,11 @@ class JointStatePublisherGui(QWidget):
         self.randomize()
 
     def randomize(self):
-        rospy.loginfo("Randomizing")
+        self.jsp.node.get_logger().info("Randomizing")
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
             joint_info['slider'].setValue(
-                    self.valueToSlider(random.uniform(joint['min'], joint['max']), joint))
-
-    def sliderUpdate(self, event):
-        for name, joint_info in self.joint_map.items():
-            joint_info['slidervalue'] = joint_info['slider'].value()
-        self.update_sliders()
+                self.valueToSlider(random.uniform(joint['min'], joint['max']), joint))
 
     def valueToSlider(self, value, joint):
         return (value - joint['min']) * float(RANGE) / (joint['max'] - joint['min'])
@@ -226,3 +230,37 @@ class JointStatePublisherGui(QWidget):
     def sliderToValue(self, slider, joint):
         pctvalue = slider / float(RANGE)
         return joint['min'] + (joint['max']-joint['min']) * pctvalue
+
+    def closeEvent(self, event):
+        self.jsp.running = False
+
+
+def main(input_args=None):
+    if input_args is None:
+        input_args = sys.argv
+
+    # Initialize rclpy with the command-line arguments
+    rclpy.init(args=input_args)
+
+    # Strip off the ROS 2-specific command-line arguments
+    stripped_args = rclpy.utilities.remove_ros_args(args=input_args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('urdf_file', help='URDF file to use', nargs='?', default=None)
+
+    # Parse the remaining arguments, noting that the passed-in args must *not*
+    # contain the name of the program.
+    parsed_args = parser.parse_args(args=stripped_args[1:])
+
+    app = QApplication(sys.argv)
+    jsp_gui = JointStatePublisherGui('Joint State Publisher',
+                                     JointStatePublisher(parsed_args.urdf_file))
+
+    jsp_gui.show()
+    jsp_gui.initialize.emit()
+
+    threading.Thread(target=jsp_gui.jsp.loop).start()
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    sys.exit(app.exec_())
+
+if __name__ == '__main__':
+    main()
