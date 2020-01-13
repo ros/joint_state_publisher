@@ -1,7 +1,7 @@
-# Software License Agreement (BSD License)
-#
 # Copyright (c) 2010, Willow Garage, Inc.
 # All rights reserved.
+#
+# Software License Agreement (BSD License 2.0)
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -213,9 +213,10 @@ class JointStatePublisher():
         self.use_mimic = self.get_param('use_mimic_tags')
         self.use_small = self.get_param('use_smallest_joint_limits')
 
-        # This returns a map of name -> Parameter structures, but self.zeros is
-        # expected to be a list of name -> float; fix that here.
         zeros = self.node.get_parameters_by_prefix('zeros')
+        # get_parameters_by_prefix() returns a map of name -> Parameter
+        # structures, but self.zeros is expected to be a list of name -> float;
+        # fix that here.
         self.zeros = {k:v.value for (k, v) in zeros.items()}
 
         self.pub_def_positions = self.get_param('publish_default_positions')
