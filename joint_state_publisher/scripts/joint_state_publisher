@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+
+# Software License Agreement (BSD License)
+#
+# Copyright (c) 2010, Willow Garage, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Willow Garage, Inc. nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+import sys
+
+import rospy
+
+import joint_state_publisher
+
+if __name__ == '__main__':
+    try:
+        rospy.init_node('joint_state_publisher')
+        jsp = joint_state_publisher.JointStatePublisher()
+
+        use_gui = joint_state_publisher.get_param('use_gui')
+        if use_gui:
+            rospy.logwarn("The 'use_gui' parameter was specified, which is deprecated.  We'll attempt to find and run the GUI, but if this fails you should install the 'joint_state_publisher_gui' package instead and run that.  This backwards compatibility option will be removed in Noetic.")
+            try:
+                import signal
+                import threading
+
+                import joint_state_publisher_gui
+
+                from python_qt_binding.QtWidgets import QApplication
+
+                app = QApplication(sys.argv)
+
+                num_rows = joint_state_publisher.get_param('num_rows', 0)
+                jsp_gui = joint_state_publisher_gui.JointStatePublisherGui('Joint State Publisher',
+                                                                           jsp, num_rows)
+                jsp_gui.show()
+                jsp_gui.sliderUpdateTrigger.emit()
+
+                threading.Thread(target=jsp_gui.jsp.loop).start()
+                signal.signal(signal.SIGINT, signal.SIG_DFL)
+                sys.exit(app.exec_())
+            except ImportError:
+                rospy.logerr("Could not find the GUI, install the 'joint_state_publisher_gui' package")
+                sys.exit(1)
+        else:
+            jsp.loop()
+
+    except rospy.ROSInterruptException:
+        pass
