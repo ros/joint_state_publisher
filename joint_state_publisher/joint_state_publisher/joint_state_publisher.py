@@ -164,7 +164,7 @@ class JointStatePublisher(rclpy.node.Node):
             newkey = split[0]
             newvalue = split[1]
             if newvalue not in ['parent', 'factor', 'offset']:
-                raise Exception("Invalid dependent_joint name '%s'" % (newvalue))
+                raise Exception("Invalid dependent_joint name '%s' (allowed values are 'parent', 'factor', and 'offset')" % (newvalue))
             if newkey in dj:
                 dj[newkey].update({newvalue: param.value})
             else:
