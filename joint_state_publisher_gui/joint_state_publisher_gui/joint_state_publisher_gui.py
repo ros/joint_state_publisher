@@ -77,6 +77,7 @@ class JointStatePublisherGui(QWidget):
         self.scroll.setWidgetResizable(True)
         # Determine number of rows to be used in grid
         self.num_rows = num_rows
+        self.running = True
         self.initialize.connect(self.initialize_sliders)
 
     def initialize_sliders(self):
@@ -184,7 +185,7 @@ class JointStatePublisherGui(QWidget):
         self.center()
 
     def center(self):
-        self.jsp.node.get_logger().info("Centering")
+        self.jsp.get_logger().info("Centering")
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
             joint_info['slider'].setValue(self.valueToSlider(joint['zero'], joint))
@@ -218,7 +219,7 @@ class JointStatePublisherGui(QWidget):
         self.randomize()
 
     def randomize(self):
-        self.jsp.node.get_logger().info("Randomizing")
+        self.jsp.get_logger().info("Randomizing")
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
             joint_info['slider'].setValue(
@@ -232,7 +233,11 @@ class JointStatePublisherGui(QWidget):
         return joint['min'] + (joint['max']-joint['min']) * pctvalue
 
     def closeEvent(self, event):
-        self.jsp.running = False
+        self.running = False
+
+    def loop(self):
+        while self.running:
+            rclpy.spin_once(self.jsp, timeout_sec=0.1)
 
 
 def main(input_args=None):
@@ -258,7 +263,7 @@ def main(input_args=None):
     jsp_gui.show()
     jsp_gui.initialize.emit()
 
-    threading.Thread(target=jsp_gui.jsp.loop).start()
+    threading.Thread(target=jsp_gui.loop).start()
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec_())
 

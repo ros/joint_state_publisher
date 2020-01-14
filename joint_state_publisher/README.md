@@ -1,12 +1,10 @@
 # Joint State Publisher
 
 This contains a package for publishing `sensor_msgs/JointState` messages for a robot described with URDF.
-Given a URDF in the `robot_description` parameter on the parameter server, this node
-will continually publish default values for all of the movable joints in the URDF to the `/joint_states` topic.
-
 Given a URDF (either passed on the command-line or via the `/robot_description` topic), this node
-will continually publish default values for all of the movable joints in the URDF to the `/joint_states` topic.
-In combination with `robot_state_publisher`, this can update the TF2 transforms for the robot on the fly.
+will continually publish values for all of the movable joints in the URDF to the `/joint_states` topic.
+In combination with `robot_state_publisher`, this ensures that there is a valid transform for all joints
+even when the joint doesn't have encoder data.
 
 Published Topics
 ----------------
@@ -26,5 +24,6 @@ Parameters
 * `use_mimic_tags` (bool) - Whether to honor `<mimic>` tags in the URDF.  Defaults to True.
 * `use_smallest_joint_limits` (bool) - Whether to honor `<safety_controller>` tags in the URDF.  Defaults to True.
 * `source_list` (array of strings) - Each string in this array represents a topic name.  For each string, create a subscription to the named topic of type `sensor_msgs/JointStates`.  Publication to that topic will update the joints named in the message.  Defaults to an empty array.
-* `zeros` (dictionary of string -> float) - A dictionary of joint_names to initial starting values for the joint.  In Eloquent, pass on the command-line as '-p zeros.<joint_name>:=<value>'.  Defaults to an empty dictionary, in which case 0 is assumed as the zero for all joints.
+* `delta` (double) - How much to automatically move joints during each iteration.  Defaults to 0.0.
+* `zeros` (dictionary of string -> float) - A dictionary of joint_names to initial starting values for the joint.  In Eloquent, pass on the command-line as '-p zeros.joint_name:=value'.  Defaults to an empty dictionary, in which case 0 is assumed as the zero for all joints.
 * `dependent_joints` (dictionary of string -> dictionary of 'parent', 'factor', 'offset') - A dictionary of joint_names to the joints that they mimic; compare to the `<mimic>` tag in URDF.  A joint listed here will mimic the movements of the 'parent' joint, subject to the 'factor' and 'offset' provided.  The 'parent' name must be provided, while the 'factor' and 'offset' parameters are optional (they default to 1.0 and 0.0, respectively).  In Eloquent, pass on the command-line as '-p dependent_joints.left_leg.parent:=right_leg -p dependent_joints.left_leg.offset:=0.0 -p dependent_joints.left_leg.factor:=2.0'. Defaults to the empty dictionary, in which case only joints that are marked as `<mimic>` in the URDF are mimiced.
