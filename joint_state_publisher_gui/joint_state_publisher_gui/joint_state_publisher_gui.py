@@ -31,7 +31,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
-import math
 import random
 import signal
 import sys
@@ -44,49 +43,132 @@ from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtCore import Signal
 from python_qt_binding.QtGui import QFont
 from python_qt_binding.QtWidgets import QApplication
+from python_qt_binding.QtWidgets import QFormLayout
+from python_qt_binding.QtWidgets import QGridLayout
 from python_qt_binding.QtWidgets import QHBoxLayout
 from python_qt_binding.QtWidgets import QLabel
 from python_qt_binding.QtWidgets import QLineEdit
+from python_qt_binding.QtWidgets import QMainWindow
 from python_qt_binding.QtWidgets import QPushButton
 from python_qt_binding.QtWidgets import QSlider
-from python_qt_binding.QtWidgets import QVBoxLayout
-from python_qt_binding.QtWidgets import QGridLayout
 from python_qt_binding.QtWidgets import QScrollArea
-from python_qt_binding.QtWidgets import QSpinBox
+from python_qt_binding.QtWidgets import QVBoxLayout
 from python_qt_binding.QtWidgets import QWidget
 
 from joint_state_publisher.joint_state_publisher import JointStatePublisher
 
+from joint_state_publisher_gui.flow_layout import FlowLayout
+
 RANGE = 10000
 
+class Slider(QWidget):
+    def __init__(self, name):
+        super().__init__()
 
-class JointStatePublisherGui(QWidget):
+        self.joint_layout = QVBoxLayout()
+        self.row_layout = QHBoxLayout()
+
+        font = QFont("Helvetica", 9, QFont.Bold)
+        self.label = QLabel(name)
+        self.label.setFont(font)
+        self.row_layout.addWidget(self.label)
+
+        self.display = QLineEdit("0.00")
+        self.display.setAlignment(Qt.AlignRight)
+        self.display.setFont(font)
+        self.display.setReadOnly(True)
+        self.display.setFixedWidth(40)
+        self.row_layout.addWidget(self.display)
+
+        self.joint_layout.addLayout(self.row_layout)
+
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setFont(font)
+        self.slider.setRange(0, RANGE)
+        self.slider.setValue(RANGE/2)
+        self.slider.setFixedWidth(200)
+
+        self.joint_layout.addWidget(self.slider)
+
+        self.setLayout(self.joint_layout)
+
+    def remove(self):
+        self.joint_layout.removeWidget(self.slider)
+        self.slider.setParent(None)
+
+        self.row_layout.removeWidget(self.display)
+        self.display.setParent(None)
+
+        self.row_layout.removeWidget(self.label)
+        self.label.setParent(None)
+
+        self.row_layout.setParent(None)
+
+
+class JointStatePublisherGui(QMainWindow):
     sliderUpdateTrigger = Signal()
     initialize = Signal()
 
-    def __init__(self, title, jsp, num_rows=0):
+    def __init__(self, title, jsp):
         super(JointStatePublisherGui, self).__init__()
-        self.setWindowTitle(title)
-        self.jsp = jsp
-        self.jsp.set_source_update_cb(self.slider_update_cb)
-        self.jsp.set_robot_description_update_cb(self.initialize_cb)
-        self.joint_map = {}
-        self.vlayout = QVBoxLayout(self)
-        self.scrollable = QWidget()
-        self.gridlayout = QGridLayout()
-        self.scroll = QScrollArea()
-        self.scroll.setWidgetResizable(True)
-        # Determine number of rows to be used in grid
-        self.num_rows = num_rows
-        self.running = True
-        self.initialize.connect(self.initialize_sliders)
 
-    def initialize_sliders(self):
         self.joint_map = {}
-        font = QFont("Helvetica", 9, QFont.Bold)
+
+        self.setWindowTitle(title)
+
+        # Button for randomizing the sliders
+        self.rand_button = QPushButton('Randomize', self)
+        self.rand_button.clicked.connect(self.randomizeEvent)
+
+        # Button for centering the sliders
+        self.ctr_button = QPushButton('Center', self)
+        self.ctr_button.clicked.connect(self.centerEvent)
+
+        # Scroll area widget contents - layout
+        self.scroll_layout = FlowLayout()
+
+        # Scroll area widget contents
+        self.scroll_widget = QWidget()
+        self.scroll_widget.setLayout(self.scroll_layout)
+
+        # Scroll area for sliders
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setWidget(self.scroll_widget)
+
+        # Main layout
+        self.main_layout = QVBoxLayout()
+
+        # Add buttons and scroll area to main layout
+        self.main_layout.addWidget(self.rand_button)
+        self.main_layout.addWidget(self.ctr_button)
+        self.main_layout.addWidget(self.scroll_area)
+
+        # central widget
+        self.central_widget = QWidget()
+        self.central_widget.setLayout(self.main_layout)
+        self.setCentralWidget(self.central_widget)
+
+        self.jsp = jsp
+        self.jsp.set_source_update_cb(self.sliderUpdateCb)
+        self.jsp.set_robot_description_update_cb(self.initializeCb)
+
+        self.running = True
+        self.sliders = {}
+
+        # Setup signal for initializing the window
+        self.initialize.connect(self.initializeSliders)
+        # Set up a signal for updating the sliders based on external joint info
+        self.sliderUpdateTrigger.connect(self.updateSliders)
+
+    def initializeSliders(self):
+        self.joint_map = {}
+
+        for sl, _ in self.sliders.items():
+            self.scroll_layout.removeWidget(sl)
+            sl.remove()
 
         ### Generate sliders ###
-        sliders = []
         for name in self.jsp.joint_list:
             if name not in self.jsp.free_joints:
                 continue
@@ -95,77 +177,25 @@ class JointStatePublisherGui(QWidget):
             if joint['min'] == joint['max']:
                 continue
 
-            joint_layout = QVBoxLayout()
-            row_layout = QHBoxLayout()
+            slider = Slider(name)
 
-            label = QLabel(name)
-            label.setFont(font)
-            row_layout.addWidget(label)
-            display = QLineEdit("0.00")
-            display.setAlignment(Qt.AlignRight)
-            display.setFont(font)
-            display.setReadOnly(True)
-            row_layout.addWidget(display)
+            self.joint_map[name] = {'display': slider.display, 'slider': slider.slider, 'joint': joint}
 
-            joint_layout.addLayout(row_layout)
-
-            slider = QSlider(Qt.Horizontal)
-
-            slider.setFont(font)
-            slider.setRange(0, RANGE)
-            slider.setValue(RANGE/2)
-
-            joint_layout.addWidget(slider)
-
-            self.joint_map[name] = {'display': display, 'slider': slider, 'joint': joint}
+            self.scroll_layout.addWidget(slider)
             # Connect to the signal provided by QSignal
-            slider.valueChanged.connect(lambda event,name=name: self.onSliderValueChangedOne(name))
+            slider.slider.valueChanged.connect(lambda event,name=name: self.onSliderValueChangedOne(name))
 
-            sliders.append(joint_layout)
-
-        # if desired num of rows wasn't set, default behaviour is a vertical layout
-        if self.num_rows == 0:
-            self.num_rows = len(sliders)  # equals VBoxLayout
-        # Generate positions in grid and place sliders there
-        self.positions = self.generate_grid_positions(len(sliders), self.num_rows)
-        for item, pos in zip(sliders, self.positions):
-            self.gridlayout.addLayout(item, *pos)
+            self.sliders[slider] = slider
 
         # Set zero positions read from parameters
-        self.center()
-
-        # Synchronize slider and displayed value
-        self.update_sliders()
-
-        # Set up a signal for updating the sliders based on external joint info
-        self.sliderUpdateTrigger.connect(self.updateSliders)
-
-        self.scrollable.setLayout(self.gridlayout)
-        self.scroll.setWidget(self.scrollable)
-        self.vlayout.addWidget(self.scroll)
-
-        # Buttons for randomizing and centering sliders and
-        # Spinbox for on-the-fly selecting number of rows
-        self.randbutton = QPushButton('Randomize', self)
-        self.randbutton.clicked.connect(self.randomize_event)
-        self.vlayout.addWidget(self.randbutton)
-        self.ctrbutton = QPushButton('Center', self)
-        self.ctrbutton.clicked.connect(self.center_event)
-        self.vlayout.addWidget(self.ctrbutton)
-        self.maxrowsupdown = QSpinBox()
-        self.maxrowsupdown.setMinimum(1)
-        self.maxrowsupdown.setMaximum(len(sliders))
-        self.maxrowsupdown.setValue(self.num_rows)
-        self.maxrowsupdown.valueChanged.connect(self.reorggrid_event)
-        self.vlayout.addWidget(self.maxrowsupdown)
-        self.setLayout(self.vlayout)
+        self.centerEvent(None)
 
         self.sliderUpdateTrigger.emit()
 
-    def slider_update_cb(self):
+    def sliderUpdateCb(self):
         self.sliderUpdateTrigger.emit()
 
-    def initialize_cb(self):
+    def initializeCb(self):
         self.initialize.emit()
 
     def onSliderValueChangedOne(self, name):
@@ -178,52 +208,18 @@ class JointStatePublisherGui(QWidget):
 
     @pyqtSlot()
     def updateSliders(self):
-        self.update_sliders()
-
-    def update_sliders(self):
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
             slidervalue = self.valueToSlider(joint['position'], joint)
             joint_info['slider'].setValue(slidervalue)
 
-    def center_event(self, event):
-        self.center()
-
-    def center(self):
+    def centerEvent(self, event):
         self.jsp.get_logger().info("Centering")
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
             joint_info['slider'].setValue(self.valueToSlider(joint['zero'], joint))
 
-    def reorggrid_event(self, event):
-        self.reorganize_grid(event)
-
-    def reorganize_grid(self, number_of_rows):
-        self.num_rows = number_of_rows
-
-        # Remove items from layout (won't destroy them!)
-        items = []
-        for pos in self.positions:
-            item = self.gridlayout.itemAtPosition(*pos)
-            items.append(item)
-            self.gridlayout.removeItem(item)
-
-        # Generate new positions for sliders and place them in their new spots
-        self.positions = self.generate_grid_positions(len(items), self.num_rows)
-        for item, pos in zip(items, self.positions):
-            self.gridlayout.addLayout(item, *pos)
-
-    def generate_grid_positions(self, num_items, num_rows):
-        if num_rows == 0:
-            return []
-        positions = [(y, x) for x in range(int((math.ceil(float(num_items) / num_rows)))) for y in range(num_rows)]
-        positions = positions[:num_items]
-        return positions
-
-    def randomize_event(self, event):
-        self.randomize()
-
-    def randomize(self):
+    def randomizeEvent(self, event):
         self.jsp.get_logger().info("Randomizing")
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
