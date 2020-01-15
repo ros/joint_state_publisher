@@ -68,7 +68,8 @@ class JointStatePublisherGui(QWidget):
         super(JointStatePublisherGui, self).__init__()
         self.setWindowTitle(title)
         self.jsp = jsp
-        self.jsp.set_source_update_cb(self.source_update_cb)
+        self.jsp.set_source_update_cb(self.slider_update_cb)
+        self.jsp.set_robot_description_update_cb(self.initialize_cb)
         self.joint_map = {}
         self.vlayout = QVBoxLayout(self)
         self.scrollable = QWidget()
@@ -81,6 +82,7 @@ class JointStatePublisherGui(QWidget):
         self.initialize.connect(self.initialize_sliders)
 
     def initialize_sliders(self):
+        self.joint_map = {}
         font = QFont("Helvetica", 9, QFont.Bold)
 
         ### Generate sliders ###
@@ -160,8 +162,11 @@ class JointStatePublisherGui(QWidget):
 
         self.sliderUpdateTrigger.emit()
 
-    def source_update_cb(self):
+    def slider_update_cb(self):
         self.sliderUpdateTrigger.emit()
+
+    def initialize_cb(self):
+        self.initialize.emit()
 
     def onSliderValueChangedOne(self, name):
         # A slider value was changed, but we need to change the joint_info metadata.
@@ -240,15 +245,12 @@ class JointStatePublisherGui(QWidget):
             rclpy.spin_once(self.jsp, timeout_sec=0.1)
 
 
-def main(input_args=None):
-    if input_args is None:
-        input_args = sys.argv
-
+def main():
     # Initialize rclpy with the command-line arguments
-    rclpy.init(args=input_args)
+    rclpy.init()
 
     # Strip off the ROS 2-specific command-line arguments
-    stripped_args = rclpy.utilities.remove_ros_args(args=input_args)
+    stripped_args = rclpy.utilities.remove_ros_args(args=sys.argv)
     parser = argparse.ArgumentParser()
     parser.add_argument('urdf_file', help='URDF file to use', nargs='?', default=None)
 
@@ -261,7 +263,6 @@ def main(input_args=None):
                                      JointStatePublisher(parsed_args.urdf_file))
 
     jsp_gui.show()
-    jsp_gui.initialize.emit()
 
     threading.Thread(target=jsp_gui.loop).start()
     signal.signal(signal.SIGINT, signal.SIG_DFL)

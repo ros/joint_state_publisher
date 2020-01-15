@@ -141,11 +141,28 @@ class JointStatePublisher(rclpy.node.Node):
 
     def configure_robot(self, description):
         self.get_logger().debug('Got description, configuring robot')
-        robot = xml.dom.minidom.parseString(description)
+        try:
+            robot = xml.dom.minidom.parseString(description)
+        except xml.parsers.expat.ExpatError:
+            # If the description fails to parse for some reason, print an error
+            # and get out of here without doing further work.  If we were
+            # already running with a description, we'll continue running with
+            # that older one.
+            self.get_logger().warn('Invalid robot_description given, ignoring')
+            return
+
+        # Make sure to clear out the old joints so we don't get duplicate joints
+        # on a new robot description.
+        self.free_joints = {}
+        self.joint_list = [] # for maintaining the original order of the joints
+
         if robot.getElementsByTagName('COLLADA'):
             self.init_collada(robot)
         else:
             self.init_urdf(robot)
+
+        if self.robot_description_update_cb is not None:
+            self.robot_description_update_cb()
 
     def parse_dependent_joints(self):
         dj = {}
@@ -223,6 +240,9 @@ class JointStatePublisher(rclpy.node.Node):
         self.pub_def_vels = self.get_param('publish_default_velocities')
         self.pub_def_efforts = self.get_param('publish_default_efforts')
 
+        self.robot_description_update_cb = None
+
+
         if urdf_file is not None:
             # If we were given a URDF file on the command-line, use that.
             with open(urdf_file, 'r') as infp:
@@ -284,6 +304,9 @@ class JointStatePublisher(rclpy.node.Node):
 
     def set_source_update_cb(self, user_cb):
         self.source_update_cb = user_cb
+
+    def set_robot_description_update_cb(self, user_cb):
+        self.robot_description_update_cb = user_cb
 
     def timer_callback(self):
         # Publish Joint States
@@ -373,7 +396,7 @@ class JointStatePublisher(rclpy.node.Node):
 
 def main():
     # Initialize rclpy with the command-line arguments
-    rclpy.init(args=sys.argv)
+    rclpy.init()
 
     # Strip off the ROS 2-specific command-line arguments
     stripped_args = rclpy.utilities.remove_ros_args(args=sys.argv)
