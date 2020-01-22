@@ -2,6 +2,11 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Split jsp and jsp gui (`#31 <https://github.com/ros/joint_state_publisher/issues/31>`_)
+* Contributors: Chris Lalancette
+
 1.12.13 (2018-03-19)
 --------------------
 * add bugtracker link now that this is not hosted on robot_model anymore
