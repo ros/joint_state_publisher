@@ -2,8 +2,8 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.12.14 (2020-01-22)
+--------------------
 * Split jsp and jsp gui (`#31 <https://github.com/ros/joint_state_publisher/issues/31>`_)
 * Only update one joint slider on value changed. (`#11 <https://github.com/ros/joint_state_publisher/issues/11>`_)
 * ignore 'planar' joints just as 'fixed' and 'floating' (`#14 <https://github.com/ros/joint_state_publisher/issues/14>`_)
