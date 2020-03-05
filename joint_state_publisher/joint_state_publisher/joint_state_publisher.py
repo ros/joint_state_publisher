@@ -356,7 +356,7 @@ class JointStatePublisher(rclpy.node.Node):
                 while parent in self.dependent_joints:
                     if parent in recursive_mimic_chain_joints:
                         error_message = 'Found an infinite recursive mimic chain'
-                        self.get_logger().error('%s: [%s, %s]', error_message, ', '.join(recursive_mimic_chain_joints), parent)
+                        self.get_logger().error(f'{error_message}: {recursive_mimic_chain_joints + [parent]}')
                         sys.exit(1)
                     recursive_mimic_chain_joints.append(parent)
                     param = self.dependent_joints[parent]
