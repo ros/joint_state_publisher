@@ -161,6 +161,9 @@ class JointStatePublisherGui(QMainWindow):
         # Set up a signal for updating the sliders based on external joint info
         self.sliderUpdateTrigger.connect(self.updateSliders)
 
+        # Tell self to draw sliders in case the JointStatePublisher already has a robot_description
+        self.initialize.emit()
+
     def initializeSliders(self):
         self.joint_map = {}
 
