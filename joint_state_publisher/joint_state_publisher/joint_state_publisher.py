@@ -49,6 +49,16 @@ class JointStatePublisher(rclpy.node.Node):
     def get_param(self, name):
         return self.get_parameter(name).value
 
+    def _init_joint(self, minval, maxval, zeroval):
+        joint = {'min': minval, 'max': maxval, 'zero': zeroval}
+        if self.pub_def_positions:
+            joint['position'] = zeroval
+        if self.pub_def_vels:
+            joint['velocity'] = 0.0
+        if self.pub_def_efforts:
+            joint['effort'] = 0.0
+        return joint
+
     def init_collada(self, robot):
         robot = robot.getElementsByTagName('kinematics_model')[0].getElementsByTagName('technique_common')[0]
         for child in robot.childNodes:
@@ -70,8 +80,9 @@ class JointStatePublisher(rclpy.node.Node):
                     continue
 
                 self.joint_list.append(name)
-                joint = {'min':minval*math.pi/180.0, 'max':maxval*math.pi/180.0, 'zero':0, 'position':0, 'velocity':0, 'effort':0}
-                self.free_joints[name] = joint
+                minval *= math.pi/180.0
+                maxval *= math.pi/180.0
+                self.free_joints[name] = self._init_joint(minval, maxval, 0.0)
 
     def init_urdf(self, robot):
         robot = robot.getElementsByTagName('robot')[0]
@@ -127,13 +138,7 @@ class JointStatePublisher(rclpy.node.Node):
                 else:
                     zeroval = 0
 
-                joint = {'min': minval, 'max': maxval, 'zero': zeroval}
-                if self.pub_def_positions:
-                    joint['position'] = zeroval
-                if self.pub_def_vels:
-                    joint['velocity'] = 0.0
-                if self.pub_def_efforts:
-                    joint['effort'] = 0.0
+                joint = self._init_joint(minval, maxval, zeroval)
 
                 if jtype == 'continuous':
                     joint['continuous'] = True
