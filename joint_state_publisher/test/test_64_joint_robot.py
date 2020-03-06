@@ -70,4 +70,3 @@ class Test64JointRobot(unittest.TestCase):
             assert 0 == len(msgs_rx[0].effort)
         finally:
             self.node.destroy_subscription(sub)
-
