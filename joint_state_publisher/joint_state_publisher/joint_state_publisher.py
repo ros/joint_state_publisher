@@ -269,7 +269,7 @@ class JointStatePublisher(rclpy.node.Node):
             self.sources.append(self.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb, 10))
 
         # The source_update_cb will be called at the end of self.source_cb.
-        # The main purpose it to allow external observes (such as the
+        # The main purpose is to allow external observers (such as the
         # joint_state_publisher_gui) to be notified when things are updated.
         self.source_update_cb = None
 
