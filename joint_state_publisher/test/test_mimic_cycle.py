@@ -42,4 +42,3 @@ class TestMimicCycleRobot(unittest.TestCase):
         # TODO(sloretz) Uncomment when ros2/launch#378 is released
         # launch_testing.asserts.assertInStderr(jsp, msg='Found an infinite recursive mimic chain')
         launch_testing.asserts.assertExitCodes(proc_info, process=jsp, allowable_exit_codes=[1])
-
