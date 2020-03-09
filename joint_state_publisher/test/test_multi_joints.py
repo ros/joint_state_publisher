@@ -12,34 +12,73 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
 import os
 import time
 import unittest
 
 from launch import LaunchDescription
+from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 import launch_testing
 import pytest
 import rclpy
 import sensor_msgs.msg
+import yaml
 
 
 @pytest.mark.rostest
 def generate_test_description():
     test_urdfs_dir = os.path.dirname(__file__)
+
+    dae_path = os.path.join(test_urdfs_dir, 'multi_joint_robot.dae')
+    urdf_path = os.path.join(test_urdfs_dir, 'multi_joint_robot.urdf')
+
+    with open(dae_path, 'r') as dae_file:
+        dae_text = dae_file.read()
+
+    with open(urdf_path, 'r') as urdf_file:
+        urdf_text = urdf_file.read()
+
+    dae_yaml = yaml.dump({'data': dae_text})
+    urdf_yaml = yaml.dump({'data': urdf_text})
+
+    ros2_topic_cmd = ['ros2', 'topic', 'pub', '--qos-durability', 'transient_local']
+
+    ros2_topic_dae = ros2_topic_cmd + ['robot_description/dae', 'std_msgs/msg/String', dae_yaml]
+    ros2_topic_urdf = ros2_topic_cmd + ['robot_description/urdf', 'std_msgs/msg/String', urdf_yaml]
+
     return LaunchDescription([
         Node(
             package='joint_state_publisher',
             node_executable='joint_state_publisher',
             node_name='joint_state_publisher_collada',
-            arguments=[os.path.join(test_urdfs_dir, 'multi_joint_robot.dae')],
-            remappings=[('joint_states', 'joint_states/collada')]),
+            arguments=[dae_path],
+            remappings=[('joint_states', 'joint_states/collada/from_cli')]),
         Node(
             package='joint_state_publisher',
             node_executable='joint_state_publisher',
             node_name='joint_state_publisher_urdf',
-            arguments=[os.path.join(test_urdfs_dir, 'multi_joint_robot.urdf')],
-            remappings=[('joint_states', 'joint_states/urdf')]),
+            arguments=[urdf_path],
+            remappings=[('joint_states', 'joint_states/urdf/from_cli')]),
+        ExecuteProcess(cmd=ros2_topic_dae),
+        ExecuteProcess(cmd=ros2_topic_urdf),
+        Node(
+            package='joint_state_publisher',
+            node_executable='joint_state_publisher',
+            node_name='joint_state_publisher_collada_from_topic',
+            remappings=[
+                ('joint_states', 'joint_states/collada/from_topic'),
+                ('robot_description', 'robot_description/dae'),
+            ]),
+        Node(
+            package='joint_state_publisher',
+            node_executable='joint_state_publisher',
+            node_name='joint_state_publisher_urdf_from_topic',
+            remappings=[
+                ('joint_states', 'joint_states/urdf/from_topic'),
+                ('robot_description', 'robot_description/urdf'),
+            ]),
         launch_testing.actions.ReadyToTest(),
     ])
 
@@ -63,22 +102,35 @@ class TestMultiJoint(unittest.TestCase):
         self.node.destroy_node()
 
     def test_joints_published(self):
-        msgs_rx_collada = []
+        msgs_rx_collada_from_cli = []
         sub_collada = self.node.create_subscription(
-            sensor_msgs.msg.JointState, 'joint_states/collada',
-            lambda msg: msgs_rx_collada.append(msg), 1)
-        msgs_rx_urdf = []
+            sensor_msgs.msg.JointState, 'joint_states/collada/from_cli',
+            lambda msg: msgs_rx_collada_from_cli.append(msg), 1)
+        msgs_rx_urdf_from_cli = []
         sub_urdf = self.node.create_subscription(
-            sensor_msgs.msg.JointState, 'joint_states/urdf',
-            lambda msg: msgs_rx_urdf.append(msg), 1)
+            sensor_msgs.msg.JointState, 'joint_states/urdf/from_cli',
+            lambda msg: msgs_rx_urdf_from_cli.append(msg), 1)
+        msgs_rx_collada_from_topic = []
+        sub_collada = self.node.create_subscription(
+            sensor_msgs.msg.JointState, 'joint_states/collada/from_topic',
+            lambda msg: msgs_rx_collada_from_topic.append(msg), 1)
+        msgs_rx_urdf_from_topic = []
+        sub_urdf = self.node.create_subscription(
+            sensor_msgs.msg.JointState, 'joint_states/urdf/from_topic',
+            lambda msg: msgs_rx_urdf_from_topic.append(msg), 1)
         try:
             end_time = time.monotonic() + self.TIMEOUT
-            while time.monotonic() < end_time and (not msgs_rx_collada or not msgs_rx_urdf):
+            msg_lists = (
+                msgs_rx_collada_from_cli, msgs_rx_urdf_from_cli,
+                msgs_rx_collada_from_topic, msgs_rx_urdf_from_topic)
+            while time.monotonic() < end_time and not all(msg_lists):
                 rclpy.spin_once(self.node, timeout_sec=0.1)
 
-            assert msgs_rx_collada
-            assert msgs_rx_urdf
-            for msg in msgs_rx_collada + msgs_rx_urdf:
+            assert msgs_rx_collada_from_cli
+            assert msgs_rx_urdf_from_cli
+            assert msgs_rx_collada_from_topic
+            assert msgs_rx_urdf_from_topic
+            for msg in itertools.chain.from_iterable(msg_lists):
                 assert 2 == len(msg.name)
                 assert 2 == len(msg.position)
                 assert 0 == len(msg.velocity)
