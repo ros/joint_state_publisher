@@ -2,6 +2,16 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Port to ROS 2 (`#30 <https://github.com/ros/joint_state_publisher/issues/30>`_)
+* Remove the deprecated fallback option of use_gui (`#34 <https://github.com/ros/joint_state_publisher/issues/34>`_)
+* Split jsp and jsp gui (`#31 <https://github.com/ros/joint_state_publisher/issues/31>`_)
+* Only update one joint slider on value changed. (`#11 <https://github.com/ros/joint_state_publisher/issues/11>`_)
+* ignore 'planar' joints just as 'fixed' and 'floating' (`#14 <https://github.com/ros/joint_state_publisher/issues/14>`_)
+* Make GUI window scroll & resize for large robots (`#10 <https://github.com/ros/joint_state_publisher/issues/10>`_)
+* Contributors: Andy McEvoy, Chris Lalancette, Michael Görner
+
 1.12.13 (2018-03-19)
 --------------------
 * add bugtracker link now that this is not hosted on robot_model anymore
