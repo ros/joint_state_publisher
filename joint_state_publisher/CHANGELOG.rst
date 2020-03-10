@@ -2,8 +2,8 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.0 (2020-03-10)
+------------------
 * Port to ROS 2 (`#30 <https://github.com/ros/joint_state_publisher/issues/30>`_)
 * Remove the deprecated fallback option of use_gui (`#34 <https://github.com/ros/joint_state_publisher/issues/34>`_)
 * Split jsp and jsp gui (`#31 <https://github.com/ros/joint_state_publisher/issues/31>`_)
