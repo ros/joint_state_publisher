@@ -47,8 +47,9 @@ if __name__ == '__main__':
     try:
         rospy.init_node('joint_state_publisher_gui')
         app = QApplication(sys.argv)
+        app.setApplicationDisplayName("Joint State Publisher")
         num_rows = joint_state_publisher.get_param('num_rows', 0)
-        jsp_gui = joint_state_publisher_gui.JointStatePublisherGui('Joint State Publisher',
+        jsp_gui = joint_state_publisher_gui.JointStatePublisherGui("Node: " + rospy.get_name(),
                                                                    joint_state_publisher.JointStatePublisher(),
                                                                    num_rows)
         jsp_gui.show()

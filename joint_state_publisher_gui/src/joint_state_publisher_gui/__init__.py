@@ -59,6 +59,7 @@ class JointStatePublisherGui(QWidget):
 
     def __init__(self, title, jsp, num_rows=0):
         super(JointStatePublisherGui, self).__init__()
+        self.setWindowTitle(title)
         self.jsp = jsp
         self.joint_map = {}
         self.vlayout = QVBoxLayout(self)
