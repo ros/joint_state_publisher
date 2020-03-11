@@ -160,15 +160,15 @@ class JointStatePublisher():
         else:
             self.init_urdf(robot)
 
-        source_list = get_param("source_list", [])
-        self.sources = []
-        for source in source_list:
-            self.sources.append(rospy.Subscriber(source, sensor_msgs.msg.JointState, self.source_cb))
-
         # The source_update_cb will be called at the end of self.source_cb.
         # The main purpose it to allow external observes (such as the
         # joint_state_publisher_gui) to be notified when things are updated.
         self.source_update_cb = None
+
+        source_list = get_param("source_list", [])
+        self.sources = []
+        for source in source_list:
+            self.sources.append(rospy.Subscriber(source, sensor_msgs.msg.JointState, self.source_cb))
 
         self.pub = rospy.Publisher('joint_states', sensor_msgs.msg.JointState, queue_size=5)
 
