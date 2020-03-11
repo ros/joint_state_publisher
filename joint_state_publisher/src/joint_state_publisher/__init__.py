@@ -141,6 +141,8 @@ class JointStatePublisher():
 
     def __init__(self):
         description = get_param('robot_description')
+        if description is None:
+            raise RuntimeError('The robot_description parameter is required and not set.')
 
         self.free_joints = {}
         self.joint_list = [] # for maintaining the original order of the joints
