@@ -2,6 +2,12 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.12.15 (2020-03-12)
+--------------------
+* Make it clear robot_description is required (`#42 <https://github.com/ros/joint_state_publisher/issues/42>`_)
+* Set source_update_cb attr before creating subscribers (`#41 <https://github.com/ros/joint_state_publisher/issues/41>`_)
+* Contributors: Shane Loretz
+
 1.12.14 (2020-01-22)
 --------------------
 * Split jsp and jsp gui (`#31 <https://github.com/ros/joint_state_publisher/issues/31>`_)
