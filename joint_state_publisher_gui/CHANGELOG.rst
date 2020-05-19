@@ -2,6 +2,9 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 2.0.0 (2020-03-10)
 ------------------
 * Port to ROS 2 (`#30 <https://github.com/ros/joint_state_publisher/issues/30>`_)
