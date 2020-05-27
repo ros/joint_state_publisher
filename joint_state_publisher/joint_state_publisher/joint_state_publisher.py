@@ -169,6 +169,16 @@ class JointStatePublisher(rclpy.node.Node):
         if self.robot_description_update_cb is not None:
             self.robot_description_update_cb()
 
+    # Dashing doesn't have get_parameters_by_prefix in python, so we emulate it here.
+    def get_parameters_by_prefix(self, prefix):
+        prefix += '.'
+        return_dict = {}
+        for parameter_name in self._parameters.keys():
+            if parameter_name.startswith(prefix):
+                return_dict[parameter_name[len(prefix):]] = self._parameters[parameter_name]
+
+        return return_dict
+
     def parse_dependent_joints(self):
         dj = {}
         dependent_joints = self.get_parameters_by_prefix('dependent_joints')
@@ -214,7 +224,7 @@ class JointStatePublisher(rclpy.node.Node):
             pass
 
     def __init__(self, urdf_file):
-        super().__init__('joint_state_publisher', automatically_declare_parameters_from_overrides=True)
+        super().__init__('joint_state_publisher', automatically_declare_parameters_from_overrides=True, allow_undeclared_parameters=True)
 
         self.declare_ros_parameter('publish_default_efforts', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
         self.declare_ros_parameter('publish_default_positions', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
