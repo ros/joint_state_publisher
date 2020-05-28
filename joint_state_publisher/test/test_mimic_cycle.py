@@ -27,7 +27,7 @@ def generate_test_description():
     test_urdfs_dir = os.path.dirname(__file__)
     joint_state_publisher = Node(
         package='joint_state_publisher',
-        node_executable='joint_state_publisher',
+        executable='joint_state_publisher',
         arguments=[os.path.join(test_urdfs_dir, 'mimic_cycle.urdf')])
     return (
         LaunchDescription([joint_state_publisher, launch_testing.actions.ReadyToTest()]),
