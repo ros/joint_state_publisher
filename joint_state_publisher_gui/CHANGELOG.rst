@@ -2,6 +2,12 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Minor fixes from review.
+* Add in pytest.ini files for jsp and jsp_gui.
+* Contributors: Chris Lalancette
+
 2.1.0 (2020-05-19)
 ------------------
 
