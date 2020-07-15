@@ -59,6 +59,46 @@ class JointStatePublisher(rclpy.node.Node):
             joint['effort'] = 0.0
         return joint
 
+    def init_sdf(self, robot):
+        robot = robot.getElementsByTagName('model')[0]
+        # Find all non-fixed joints
+        for child in robot.childNodes:
+            if child.nodeType is child.TEXT_NODE:
+                continue
+            if child.localName == 'joint':
+                jtype = child.getAttribute('type')
+                if jtype in ['gearbox', 'revolute2', 'ball', 'screw', 'universal', 'fixed']:
+                    continue
+                name = child.getAttribute('name')
+                self.joint_list.append(name)
+                if jtype == 'continuous':
+                    minval = -math.pi
+                    maxval = math.pi
+                else:
+                    # TODO actual limits
+                    minval = -math.pi  # xxx
+                    maxval = math.pi  # xxx
+                    # try:
+                    #     limit = child.getElementsByTagName('limit')[0]
+                    #     minval = float(limit.getAttribute('lower'))
+                    #     maxval = float(limit.getAttribute('upper'))
+                    # except:
+                    #     self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
+                    #     continue
+
+                if self.zeros and name in self.zeros:
+                    zeroval = self.zeros[name]
+                elif minval > 0 or maxval < 0:
+                    zeroval = (maxval + minval)/2
+                else:
+                    zeroval = 0
+
+                joint = self._init_joint(minval, maxval, zeroval)
+
+                if jtype == 'continuous':
+                    joint['continuous'] = True
+                self.free_joints[name] = joint
+
     def init_collada(self, robot):
         robot = robot.getElementsByTagName('kinematics_model')[0].getElementsByTagName('technique_common')[0]
         for child in robot.childNodes:
@@ -73,9 +113,11 @@ class JointStatePublisher(rclpy.node.Node):
                     continue
 
                 if joint:
-                    limit = joint.getElementsByTagName('limits')[0]
-                    minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
-                    maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
+                    limit_list = joint.getElementsByTagName('limits')
+                    if limit_list:
+                        limit = limit_list[0]
+                        minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
+                        maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
                 if minval == maxval:  # this is a fixed joint
                     continue
 
@@ -161,7 +203,9 @@ class JointStatePublisher(rclpy.node.Node):
         self.free_joints = {}
         self.joint_list = [] # for maintaining the original order of the joints
 
-        if robot.getElementsByTagName('COLLADA'):
+        if robot.getElementsByTagName('sdf'):
+            self.init_sdf(robot)
+        elif robot.getElementsByTagName('COLLADA'):
             self.init_collada(robot)
         else:
             self.init_urdf(robot)
