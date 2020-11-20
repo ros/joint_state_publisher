@@ -156,7 +156,7 @@ class JointStatePublisher():
         self.pub_def_vels = get_param("publish_default_velocities", False)
         self.pub_def_efforts = get_param("publish_default_efforts", False)
 
-        robot = xml.dom.minidom.parseString(description)
+        robot = xml.dom.minidom.parseString(description.encode('utf-8'))
         if robot.getElementsByTagName('COLLADA'):
             self.init_collada(robot)
         else:
@@ -242,7 +242,7 @@ class JointStatePublisher():
                 msg.effort = num_joints * [0.0]
 
             for i, name in enumerate(self.joint_list):
-                msg.name.append(str(name))
+                msg.name.append(name)
                 joint = None
 
                 # Add Free Joint
