@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <param name="robot_description" textfile="$(find joint_state_publisher)/test/unicode.urdf"/>
-  <node pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" name="dut_joint_state_publisher">
+  <node pkg="joint_state_publisher" type="joint_state_publisher" name="dut_joint_state_publisher">
     <param name="rate" value="10"/>
   </node>
   <test pkg="rostest" type="hztest" name="hztest" test-name="hztest_mimic_chain">
