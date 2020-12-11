@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<robot name="π">
+    <!-- 设置 -->
+    <link name="link1"/>
+    <link name="link2"/>
+
+    <joint name="π12" type="revolute">
+        <parent link="link1"/>
+        <child link="link2"/>
+        <limit effort="10" velocity="10" lower="-1" upper="1"/>
+    </joint>
+</robot>
