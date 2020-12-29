@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <param name="robot_description" textfile="$(find joint_state_publisher)/test/slash_fiction.urdf"/>
+  <node pkg="joint_state_publisher" type="joint_state_publisher" name="slash_joint_state_publisher">
+    <param name="rate" value="10"/>
+    <param name="zeros/standard_name" value="0.42" />
+    <param name="zeros/kirk/spock" value="0.42" />
+  </node>
+  <test pkg="joint_state_publisher" type="test_slash_fiction.py" name="test_slash_fiction" test-name="test_slash_fiction" />
+</launch>
