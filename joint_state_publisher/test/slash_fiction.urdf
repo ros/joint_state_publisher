@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<urdf>
+  <robot name="slash_fiction">
+    <link name="link1"/>
+    <link name="link2"/>
+    <link name="link3"/>
+
+    <joint name="standard_name" type="revolute">
+      <parent link="link1"/>
+      <child link="link2"/>
+      <limit effort="10" velocity="10" lower="0.1" upper="0.5"/>
+    </joint>
+    <joint name="kirk/spock" type="revolute">
+      <parent link="link2"/>
+      <child link="link3"/>
+      <limit effort="10" velocity="10" lower="0.1" upper="0.5"/>
+    </joint>
+  </robot>
+</urdf>

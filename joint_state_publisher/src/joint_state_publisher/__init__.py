@@ -120,12 +120,12 @@ class JointStatePublisher():
                 if name in self.dependent_joints:
                     continue
 
-                if self.zeros and name in self.zeros:
-                    zeroval = self.zeros[name]
-                elif minval > 0 or maxval < 0:
-                    zeroval = (maxval + minval)/2
-                else:
-                    zeroval = 0
+                zeroval = get_param("zeros/" + name)
+                if not zeroval:
+                    if minval > 0 or maxval < 0:
+                        zeroval = (maxval + minval)/2
+                    else:
+                        zeroval = 0
 
                 joint = {'min': minval, 'max': maxval, 'zero': zeroval}
                 if self.pub_def_positions:
@@ -150,7 +150,6 @@ class JointStatePublisher():
         self.use_mimic = get_param('use_mimic_tags', True)
         self.use_small = get_param('use_smallest_joint_limits', True)
 
-        self.zeros = get_param("zeros")
 
         self.pub_def_positions = get_param("publish_default_positions", True)
         self.pub_def_vels = get_param("publish_default_velocities", False)
