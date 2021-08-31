@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<launch>
+  <param name="robot_description" textfile="$(find joint_state_publisher)/test/nonlinear_dependent_chain.urdf"/>
+  
+  <rosparam>
+    dependent_joints:
+      finger1_joint: {
+        parent: piston_joint, 
+        p_off: -0.004,
+        z1: 0.03636756796927724,
+        z2: 0.025,
+        q_off: -0.820403314,
+        fun: "j = parent_position + p_off\nposition = (-2.0 * math.atan2((z1 - math.sqrt(math.pow(z1, 2) + math.pow(z2, 2) - math.pow(j, 2))), (z2 - j))) + q_off"
+      }
+      finger2_joint: {
+        parent: finger1_joint,
+        fun: "position = -1 * parent_position"
+      }
+  </rosparam>
+
+  <node pkg="joint_state_publisher_gui" type="joint_state_publisher_gui" name="dut_joint_state_publisher_gui">
+    <param name="rate" value="10"/>
+  </node>
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen"/>
+  <test pkg="rostest" type="hztest" name="hztest" test-name="hztest_mimic_chain">
+    <param name="topic" value="joint_states"/>
+    <param name="hz" value="10"/>
+    <param name="hzerror" value="0.1"/>
+    <param name="test_duration" value="10"/>
+    <param name="wait_time" value="10"/>
+  </test>
+</launch>
