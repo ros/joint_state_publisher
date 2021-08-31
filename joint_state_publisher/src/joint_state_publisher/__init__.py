@@ -248,32 +248,15 @@ class JointStatePublisher():
                 # Add Free Joint
                 if name in self.free_joints:
                     joint = self.free_joints[name]
-                    factor = 1
-                    offset = 0
+
                 # Add Dependent Joint
                 elif name in self.dependent_joints:
-                    param = self.dependent_joints[name]
-                    parent = param['parent']
-                    factor = param.get('factor', 1)
-                    offset = param.get('offset', 0)
-                    # Handle recursive mimic chain
-                    recursive_mimic_chain_joints = [name]
-                    while parent in self.dependent_joints:
-                        if parent in recursive_mimic_chain_joints:
-                            error_message = "Found an infinite recursive mimic chain"
-                            rospy.logerr("%s: [%s, %s]", error_message, ', '.join(recursive_mimic_chain_joints), parent)
-                            sys.exit(1)
-                        recursive_mimic_chain_joints.append(parent)
-                        param = self.dependent_joints[parent]
-                        parent = param['parent']
-                        offset += factor * param.get('offset', 0)
-                        factor *= param.get('factor', 1)
-                    joint = self.free_joints[parent]
+                    joint = self.compute_dependent_joint(name, [])
 
                 if has_position and 'position' in joint:
-                    msg.position[i] = joint['position'] * factor + offset
+                    msg.position[i] = joint['position']
                 if has_velocity and 'velocity' in joint:
-                    msg.velocity[i] = joint['velocity'] * factor
+                    msg.velocity[i] = joint['velocity']
                 if has_effort and 'effort' in joint:
                     msg.effort[i] = joint['effort']
 
@@ -284,6 +267,31 @@ class JointStatePublisher():
                 r.sleep()
             except rospy.exceptions.ROSTimeMovedBackwardsException:
                 pass
+    
+    def compute_dependent_joint(self, name, recursive_mimic_chain_joints):
+        param = self.dependent_joints[name]
+        parent = param['parent']
+        loc = param.copy()
+        loc['factor'] = param.get('factor', 1) #to allow default behaviour
+        loc['offset'] = param.get('offset', 0)
+        dependent_fun = param.get('fun', "position = parent_position * factor + offset")
+        #Handle recursive mimic chain
+        recursive_mimic_chain_joints.append(name)
+        if (parent in self.dependent_joints):
+            if parent in recursive_mimic_chain_joints:
+                error_message = "Found an infinite recursive mimic chain"
+                rospy.logerr("%s: [%s, %s]", error_message, ', '.join(recursive_mimic_chain_joints), parent)
+                sys.exit(1)
+            loc['parent_position'] = self.compute_dependent_joint(parent, recursive_mimic_chain_joints)['position']
+        else:
+            loc['parent_position'] = self.free_joints[parent]['position']
+        
+        exec(dependent_fun, globals(), loc)
+        ret = {}
+        ret['position'] = loc['position']
+        #TODO: velocity
+        return ret
+
 
     def update(self, delta):
         for name, joint in self.free_joints.iteritems():
