@@ -60,6 +60,19 @@ from joint_state_publisher.joint_state_publisher import JointStatePublisher
 from joint_state_publisher_gui.flow_layout import FlowLayout
 
 RANGE = 10000
+LINE_EDIT_WIDTH = 40
+SLIDER_WIDTH = 200
+INIT_NUM_SLIDERS = 7  # Initial number of sliders to show in window
+
+# Defined by style - currently using the default style
+DEFAULT_WINDOW_MARGIN = 11
+DEFAULT_CHILD_MARGIN = 9
+DEFAULT_BTN_HEIGHT = 25
+DEFAULT_SLIDER_HEIGHT = 64  # Is the combination of default heights in Slider
+
+# Calculate default minimums for window sizing
+MIN_WIDTH = SLIDER_WIDTH + DEFAULT_CHILD_MARGIN * 4 + DEFAULT_WINDOW_MARGIN * 2
+MIN_HEIGHT = DEFAULT_BTN_HEIGHT * 2 + DEFAULT_WINDOW_MARGIN * 2 + DEFAULT_CHILD_MARGIN * 2
 
 class Slider(QWidget):
     def __init__(self, name):
@@ -77,7 +90,7 @@ class Slider(QWidget):
         self.display.setAlignment(Qt.AlignRight)
         self.display.setFont(font)
         self.display.setReadOnly(True)
-        self.display.setFixedWidth(40)
+        self.display.setFixedWidth(LINE_EDIT_WIDTH)
         self.row_layout.addWidget(self.display)
 
         self.joint_layout.addLayout(self.row_layout)
@@ -85,8 +98,8 @@ class Slider(QWidget):
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setFont(font)
         self.slider.setRange(0, RANGE)
-        self.slider.setValue(RANGE/2)
-        self.slider.setFixedWidth(200)
+        self.slider.setValue(RANGE / 2)
+        self.slider.setFixedWidth(SLIDER_WIDTH)
 
         self.joint_layout.addWidget(self.slider)
 
@@ -192,6 +205,15 @@ class JointStatePublisherGui(QMainWindow):
 
         # Set zero positions read from parameters
         self.centerEvent(None)
+
+        # Set size of min size of window based on number of sliders.
+        if len(self.sliders) >= INIT_NUM_SLIDERS:  # Limits min size to show INIT_NUM_SLIDERS
+            num_sliders = INIT_NUM_SLIDERS
+        else:
+            num_sliders = len(self.sliders)
+        scroll_layout_height = num_sliders * DEFAULT_SLIDER_HEIGHT
+        scroll_layout_height += (num_sliders - 1) * DEFAULT_CHILD_MARGIN
+        self.setMinimumSize(MIN_WIDTH, scroll_layout_height + MIN_HEIGHT)
 
         self.sliderUpdateTrigger.emit()
 
