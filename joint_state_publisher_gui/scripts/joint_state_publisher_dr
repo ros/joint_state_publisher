@@ -1,0 +1,119 @@
+#!/usr/bin/env python
+
+# Software License Agreement (BSD License)
+#
+# Copyright (c) 2021, Lucas Walter
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above
+#    copyright notice, this list of conditions and the following
+#    disclaimer in the documentation and/or other materials provided
+#    with the distribution.
+#  * Neither the name of Willow Garage, Inc. nor the names of its
+#    contributors may be used to endorse or promote products derived
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+
+import random
+
+import rospy
+from ddynamic_reconfigure_python.ddynamic_reconfigure import DDynamicReconfigure
+
+import joint_state_publisher
+
+
+class JointStatePublisherDR():
+    def __init__(self, jsp):
+        self.jsp = jsp
+        self.ddynrec = DDynamicReconfigure("")
+
+        for name in self.jsp.joint_list:
+            if name not in self.jsp.free_joints:
+                continue
+            joint = self.jsp.free_joints[name]
+
+            if joint['min'] == joint['max']:
+                continue
+
+            self.ddynrec.add_variable(name, "", float(joint['zero']),
+                                      float(joint['min']), float(joint['max']))
+
+        # there cannot be a joint named 'center' or 'randomize'
+        self.ddynrec.add_variable("center", "Set all joints to zero positions", False)
+        # Set zero positions read from parameters
+        # self.center()
+
+        self.ddynrec.add_variable("randomize", "Set all joints to random positions", False)
+
+        self.jsp.set_source_update_cb(self.source_update_cb)
+
+        self.config = None
+        self.ddynrec.start(self.dyn_rec_callback)
+
+    def source_update_cb(self):
+        rospy.logwarn("TBD handle jsp updates")
+
+    def dyn_rec_callback(self, config, level):
+        if config.center:
+            config = self.center(config)
+            config.center = False
+        if config.randomize:
+            config = self.randomize(config)
+            config.randomize = False
+        for name in self.jsp.free_joints.keys():
+            if name not in config.keys():
+                rospy.logerr(name + " not in config: " + str(config.keys()))
+                continue
+            self.jsp.free_joints[name]['position'] = config[name]
+
+        self.config = config
+        return config
+
+    def update_config(self):
+        config = {}
+        for name in self.jsp.free_joints.keys():
+            config[name] = self.jsp.free_joints[name]['position']
+        self.ddynrec.dyn_rec_srv.update_configuration(config)
+
+    def center(self, config):
+        rospy.loginfo("Centering")
+        for name in self.jsp.free_joints.keys():
+            if name in config.keys():
+                config[name] = self.jsp.free_joints[name]['zero']
+        return config
+
+    def randomize(self, config):
+        rospy.loginfo("Randomizing")
+        for name in self.jsp.free_joints.keys():
+            if name in config.keys():
+                config[name] = random.uniform(self.jsp.free_joints[name]['min'],
+                                              self.jsp.free_joints[name]['max'])
+        return config
+
+
+if __name__ == '__main__':
+    try:
+        rospy.init_node('joint_state_publisher_dr')
+        jsp_dr = JointStatePublisherDR(joint_state_publisher.JointStatePublisher())
+        # TODO(lucasw) threading.Thread here?
+        jsp_dr.jsp.loop()
+    except rospy.ROSInterruptException:
+        pass
