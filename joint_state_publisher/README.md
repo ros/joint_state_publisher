@@ -23,7 +23,7 @@ Parameters
 ----------
 * `robot_description` (string, required) - A URDF or DAE file describing the robot.
 * `rate` (int) - The rate at which to publish updates to the `/joint_states` topic.  Defaults to 10.
-* `publish_default_positions` (bool) - Whether to publish a default position for each movable joint to the `/joint_states` topic.  If False, `use_gui` must also be False.  Defaults to True.
+* `publish_default_positions` (bool) - Whether to publish a default position for each movable joint to the `/joint_states` topic.  Defaults to True.
 * `publish_default_velocities` (bool) - Whether to publish a default velocity for each movable joint to the `/joint_states` topic.  Defaults to False.
 * `publish_default_efforts` (bool) - Whether to publish a default effort for each movable joint to the `/joint_states` topic.  Defaults to False.
 * `use_mimic_tags` (bool) - Whether to honor `<mimic>` tags in the URDF.  Defaults to True.
