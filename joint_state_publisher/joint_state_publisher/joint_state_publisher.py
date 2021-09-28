@@ -259,7 +259,7 @@ class JointStatePublisher(rclpy.node.Node):
             self.get_logger().info('Waiting for robot_description to be published on the robot_description topic...')
             self.create_subscription(std_msgs.msg.String, 'robot_description',
                                      lambda msg: self.configure_robot(msg.data),
-                                     rclpy.qos.QoSProfile(depth=1, durability=rclpy.qos.QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL))
+                                     rclpy.qos.QoSProfile(depth=1, durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL))
 
         self.delta = self.get_param('delta')
 
