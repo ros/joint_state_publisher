@@ -212,7 +212,7 @@ class JointStatePublisherGui(QMainWindow):
         else:
             num_sliders = len(self.sliders)
         scroll_layout_height = num_sliders * DEFAULT_SLIDER_HEIGHT
-        scroll_layout_height += (num_sliders - 1) * DEFAULT_CHILD_MARGIN
+        scroll_layout_height += (num_sliders + 1) * DEFAULT_CHILD_MARGIN
         self.setMinimumSize(MIN_WIDTH, scroll_layout_height + MIN_HEIGHT)
 
         self.sliderUpdateTrigger.emit()
