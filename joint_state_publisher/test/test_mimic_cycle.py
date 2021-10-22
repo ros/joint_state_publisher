@@ -38,7 +38,7 @@ def generate_test_description():
 class TestMimicCycleRobot(unittest.TestCase):
 
     def test_termination(self, proc_info, joint_state_publisher):
-        proc_info.assertWaitForShutdown(process=joint_state_publisher, timeout=(10))
+        proc_info.assertWaitForShutdown(process=joint_state_publisher, timeout=10)
 
 @launch_testing.post_shutdown_test()
 class TestMimicCycleRobotAfterShutdown(unittest.TestCase):
