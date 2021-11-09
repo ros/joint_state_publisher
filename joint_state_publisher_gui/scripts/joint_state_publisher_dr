@@ -51,7 +51,12 @@ class JointStatePublisherDR():
             joint = self.jsp.free_joints[name]
 
             if joint['min'] == joint['max']:
-                continue
+                # the user will figure out what is wrong if they are shown a joint with no travel
+                rospy.logwarn("joint '{}' min and max are the same {}".format(name, joint['min']))
+
+            if joint['min'] > joint['max']:
+                # this will be glitchy if not swapped, which should lead user back to this warning
+                rospy.logwarn("joint '{}' min {} > max {}".format(name, joint['min'], joint['max']))
 
             self.ddynrec.add_variable(name, "", float(joint['zero']),
                                       float(joint['min']), float(joint['max']))
