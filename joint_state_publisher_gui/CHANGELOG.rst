@@ -2,8 +2,8 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.15.1 (2022-02-17)
+-------------------
 * Use setuptools instead of distutils (`#45 <https://github.com/ros/joint_state_publisher/issues/45>`_)
 * Contributors: Shane Loretz
 

@@ -2,8 +2,8 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.15.1 (2022-02-17)
+-------------------
 * The jsp can now use the zeros parameter when joint names have slashes. (`#60 <https://github.com/ros/joint_state_publisher/issues/60>`_)
 * Removed reference to removed use_gui parameter (`#69 <https://github.com/ros/joint_state_publisher/issues/69>`_)
 * Use setuptools instead of distutils (`#45 <https://github.com/ros/joint_state_publisher/issues/45>`_)
