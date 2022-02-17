@@ -2,6 +2,11 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use setuptools instead of distutils (`#45 <https://github.com/ros/joint_state_publisher/issues/45>`_)
+* Contributors: Shane Loretz
+
 1.15.0 (2020-03-12)
 -------------------
 * Bump CMake version to avoid CMP0048 (`#44 <https://github.com/ros/joint_state_publisher/issues/44>`_)
