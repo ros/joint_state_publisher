@@ -2,8 +2,8 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.3.0 (2022-04-21)
+------------------
 * Use underscores in setup.cfg. (`#76 <https://github.com/ros/joint_state_publisher/issues/76>`_)
 * Fix the mimic_cycle test to always succeed. (`#74 <https://github.com/ros/joint_state_publisher/issues/74>`_)
 * Remove deprecated policy warning (`#67 <https://github.com/ros/joint_state_publisher/issues/67>`_)
