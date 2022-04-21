@@ -2,6 +2,16 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use underscores in setup.cfg. (`#76 <https://github.com/ros/joint_state_publisher/issues/76>`_)
+* Fix the mimic_cycle test to always succeed. (`#74 <https://github.com/ros/joint_state_publisher/issues/74>`_)
+* Remove deprecated policy warning (`#67 <https://github.com/ros/joint_state_publisher/issues/67>`_)
+* Clarify docs on 'mapped parameters' in README (`#66 <https://github.com/ros/joint_state_publisher/issues/66>`_) (`#71 <https://github.com/ros/joint_state_publisher/issues/71>`_)
+  * Clarify docs on 'mapped parameters' in README
+  Co-authored-by: Binit Shah <bshah@hello-robot.com>
+* Contributors: Binit Shah, Chris Lalancette
+
 2.2.0 (2020-06-04)
 ------------------
 * Minor fixes from review.

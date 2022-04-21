@@ -2,6 +2,13 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix use of joint_state_publisher on Ubuntu Jammy. (`#78 <https://github.com/ros/joint_state_publisher/issues/78>`_)
+* Use underscores in setup.cfg. (`#76 <https://github.com/ros/joint_state_publisher/issues/76>`_)
+* Automatically resize window based on number of joints (`#68 <https://github.com/ros/joint_state_publisher/issues/68>`_)
+* Contributors: Andy McEvoy, Chris Lalancette
+
 2.2.0 (2020-06-04)
 ------------------
 * Minor fixes from review.
