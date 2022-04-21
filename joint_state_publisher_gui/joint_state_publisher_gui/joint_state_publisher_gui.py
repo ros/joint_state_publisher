@@ -98,7 +98,7 @@ class Slider(QWidget):
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setFont(font)
         self.slider.setRange(0, RANGE)
-        self.slider.setValue(RANGE / 2)
+        self.slider.setValue(int(RANGE / 2))
         self.slider.setFixedWidth(SLIDER_WIDTH)
 
         self.joint_layout.addWidget(self.slider)
@@ -252,7 +252,7 @@ class JointStatePublisherGui(QMainWindow):
                 self.valueToSlider(random.uniform(joint['min'], joint['max']), joint))
 
     def valueToSlider(self, value, joint):
-        return (value - joint['min']) * float(RANGE) / (joint['max'] - joint['min'])
+        return int((value - joint['min']) * float(RANGE) / (joint['max'] - joint['min']))
 
     def sliderToValue(self, slider, joint):
         pctvalue = slider / float(RANGE)
