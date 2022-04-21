@@ -100,7 +100,7 @@ class JointStatePublisherGui(QWidget):
 
             slider.setFont(font)
             slider.setRange(0, RANGE)
-            slider.setValue(RANGE/2)
+            slider.setValue(int(RANGE/2))
 
             joint_layout.addWidget(slider)
 
@@ -222,7 +222,7 @@ class JointStatePublisherGui(QWidget):
         self.update_sliders()
 
     def valueToSlider(self, value, joint):
-        return (value - joint['min']) * float(RANGE) / (joint['max'] - joint['min'])
+        return int((value - joint['min']) * float(RANGE) / (joint['max'] - joint['min']))
 
     def sliderToValue(self, slider, joint):
         pctvalue = slider / float(RANGE)
