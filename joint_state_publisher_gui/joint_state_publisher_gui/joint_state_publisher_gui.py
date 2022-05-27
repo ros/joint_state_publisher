@@ -98,7 +98,7 @@ class Slider(QWidget):
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setFont(font)
         self.slider.setRange(0, RANGE)
-        self.slider.setValue(RANGE / 2)
+        self.slider.setValue(RANGE // 2)
         self.slider.setFixedWidth(SLIDER_WIDTH)
 
         self.joint_layout.addWidget(self.slider)
@@ -235,8 +235,7 @@ class JointStatePublisherGui(QMainWindow):
     def updateSliders(self):
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
-            slidervalue = self.valueToSlider(joint['position'], joint)
-            joint_info['slider'].setValue(slidervalue)
+            joint_info['slider'].setValue(self.valueToSlider(joint['position'], joint))
 
     def centerEvent(self, event):
         self.jsp.get_logger().info("Centering")
@@ -252,7 +251,7 @@ class JointStatePublisherGui(QMainWindow):
                 self.valueToSlider(random.uniform(joint['min'], joint['max']), joint))
 
     def valueToSlider(self, value, joint):
-        return (value - joint['min']) * float(RANGE) / (joint['max'] - joint['min'])
+        return int((value - joint['min']) * float(RANGE) // (joint['max'] - joint['min']))
 
     def sliderToValue(self, slider, joint):
         pctvalue = slider / float(RANGE)
