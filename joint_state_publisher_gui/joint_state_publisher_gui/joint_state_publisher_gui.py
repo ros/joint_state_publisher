@@ -60,7 +60,7 @@ from joint_state_publisher.joint_state_publisher import JointStatePublisher
 from joint_state_publisher_gui.flow_layout import FlowLayout
 
 RANGE = 10000
-LINE_EDIT_WIDTH = 40
+LINE_EDIT_WIDTH = 45
 SLIDER_WIDTH = 200
 INIT_NUM_SLIDERS = 7  # Initial number of sliders to show in window
 
@@ -229,7 +229,7 @@ class JointStatePublisherGui(QMainWindow):
         slidervalue = joint_info['slider'].value()
         joint = joint_info['joint']
         joint['position'] = self.sliderToValue(slidervalue, joint)
-        joint_info['display'].setText("%.2f" % joint['position'])
+        joint_info['display'].setText("%.3f" % joint['position'])
 
     @pyqtSlot()
     def updateSliders(self):
