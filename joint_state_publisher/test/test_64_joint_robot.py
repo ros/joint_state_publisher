@@ -30,7 +30,7 @@ def generate_test_description():
     return LaunchDescription([
         Node(
             package='joint_state_publisher',
-            node_executable='joint_state_publisher',
+            executable='joint_state_publisher',
             arguments=[os.path.join(test_urdfs_dir, '64_joint_robot.urdf')]),
         launch_testing.actions.ReadyToTest(),
     ])

@@ -2,6 +2,26 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.3.0 (2022-04-21)
+------------------
+* Use underscores in setup.cfg. (`#76 <https://github.com/ros/joint_state_publisher/issues/76>`_)
+* Fix the mimic_cycle test to always succeed. (`#74 <https://github.com/ros/joint_state_publisher/issues/74>`_)
+* Remove deprecated policy warning (`#67 <https://github.com/ros/joint_state_publisher/issues/67>`_)
+* Clarify docs on 'mapped parameters' in README (`#66 <https://github.com/ros/joint_state_publisher/issues/66>`_) (`#71 <https://github.com/ros/joint_state_publisher/issues/71>`_)
+  * Clarify docs on 'mapped parameters' in README
+  Co-authored-by: Binit Shah <bshah@hello-robot.com>
+* Contributors: Binit Shah, Chris Lalancette
+
+2.2.0 (2020-06-04)
+------------------
+* Minor fixes from review.
+* Add in pytest.ini files for jsp and jsp_gui.
+* Stop using deprecated launch parameters in Foxy.
+* Contributors: Chris Lalancette
+
+2.1.0 (2020-05-19)
+------------------
+
 2.0.0 (2020-03-10)
 ------------------
 * Port to ROS 2 (`#30 <https://github.com/ros/joint_state_publisher/issues/30>`_)

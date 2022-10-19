@@ -51,30 +51,30 @@ def generate_test_description():
     return LaunchDescription([
         Node(
             package='joint_state_publisher',
-            node_executable='joint_state_publisher',
-            node_name='joint_state_publisher_collada',
+            executable='joint_state_publisher',
+            name='joint_state_publisher_collada',
             arguments=[dae_path],
             remappings=[('joint_states', 'joint_states/collada/from_cli')]),
         Node(
             package='joint_state_publisher',
-            node_executable='joint_state_publisher',
-            node_name='joint_state_publisher_urdf',
+            executable='joint_state_publisher',
+            name='joint_state_publisher_urdf',
             arguments=[urdf_path],
             remappings=[('joint_states', 'joint_states/urdf/from_cli')]),
         ExecuteProcess(cmd=ros2_topic_dae),
         ExecuteProcess(cmd=ros2_topic_urdf),
         Node(
             package='joint_state_publisher',
-            node_executable='joint_state_publisher',
-            node_name='joint_state_publisher_collada_from_topic',
+            executable='joint_state_publisher',
+            name='joint_state_publisher_collada_from_topic',
             remappings=[
                 ('joint_states', 'joint_states/collada/from_topic'),
                 ('robot_description', 'robot_description/dae'),
             ]),
         Node(
             package='joint_state_publisher',
-            node_executable='joint_state_publisher',
-            node_name='joint_state_publisher_urdf_from_topic',
+            executable='joint_state_publisher',
+            name='joint_state_publisher_urdf_from_topic',
             remappings=[
                 ('joint_states', 'joint_states/urdf/from_topic'),
                 ('robot_description', 'robot_description/urdf'),
