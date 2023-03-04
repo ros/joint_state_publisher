@@ -1,4 +1,4 @@
-<package format="2">
+<package format="3">
   <name>joint_state_publisher_gui</name>
   <version>1.15.1</version>
   <description>
