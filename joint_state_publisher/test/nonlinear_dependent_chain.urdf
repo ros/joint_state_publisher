@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<robot name="nonlinear_dependent_chain">
+  <link name="finger1">
+    <visual>
+      <origin xyz="0.0628 -0.0207 0.0" rpy="0 0 -0.2584" />
+      <geometry>
+        <box size="0.149 0.0277 0.07" />
+      </geometry>
+    </visual>
+  </link>
+  <link name="finger2">
+    <visual>
+      <origin xyz="0.0628 0.0207 0.0" rpy="0 0 0.2584" />
+      <geometry>
+        <box size="0.149 0.0277 0.07" />
+      </geometry>
+    </visual>
+  </link>
+  <link name="base">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <box size="0.2 0.2 0.001" />
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="piston">
+    <visual>
+      <origin xyz="0 0 -0.1" rpy="0 0 0" />
+      <geometry>
+        <box size="0.02 0.02 0.2" />
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="finger1_joint" type="revolute">
+    <origin rpy="0 -1.57 0" xyz="0 -0.033 0" />
+    <parent link="base" />
+    <child link="finger1" />
+    <axis xyz="0 0 -1" />
+    <limit effort="10" velocity="10" lower="-1" upper="1" />
+  </joint>
+  <joint name="finger2_joint" type="revolute">
+    <origin rpy="0 -1.57 0" xyz="0 0.033 0" />
+    <parent link="base" />
+    <child link="finger2" />
+    <axis xyz="0 0 -1" />
+    <limit effort="10" velocity="10" lower="-1" upper="1" />
+  </joint>
+  <joint name="piston_joint" type="prismatic">
+    <parent link="base" />
+    <child link="piston" />
+    <axis xyz="0 0 1"/>
+    <limit effort="10" velocity="10" lower="-0.02" upper="0.04" />
+  </joint>
+</robot>
