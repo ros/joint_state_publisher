@@ -76,6 +76,7 @@ class JointStatePublisher(rclpy.node.Node):
                     maxval = math.pi
                 else:
                     # TODO actual limits
+                    # radians for revolute joints, meters for prismatic joints
                     minval = -math.pi  # xxx
                     maxval = math.pi  # xxx
                     # try:
