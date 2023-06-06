@@ -5,7 +5,7 @@
     <link name="link2"/>
     <link name="link3"/>
 
-    <joint name='j12' type='revolute'>
+    <joint name='j12' type='revolute2'>
         <parent>link1</parent>
         <child>link2</child>
         <axis>
@@ -17,7 +17,7 @@
         </axis>
     </joint>
 
-    <joint name='j23' type='revolute'>
+    <joint name='j23' type='revolute2'>
         <parent>link2</parent>
         <child>link3</child>
         <axis>
