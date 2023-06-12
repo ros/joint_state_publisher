@@ -67,7 +67,7 @@ class JointStatePublisher(rclpy.node.Node):
                 continue
             if child.localName == 'joint':
                 jtype = child.getAttribute('type')
-                if jtype in ('gearbox', 'revolute2', 'ball', 'screw', 'universal', 'fixed'):
+                if jtype in ('gearbox', 'revolute', 'ball', 'screw', 'universal', 'fixed'):
                     continue
                 name = child.getAttribute('name')
                 self.joint_list.append(name)

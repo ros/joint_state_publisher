@@ -60,19 +60,22 @@ def generate_test_description():
             executable='joint_state_publisher',
             name='joint_state_publisher_collada',
             arguments=[dae_path],
-            remappings=[('joint_states', 'joint_states/collada/from_cli')]),
+            remappings=[('joint_states', 'joint_states/collada/from_cli')],
+            output=['screen']),
         Node(
             package='joint_state_publisher',
             executable='joint_state_publisher',
             name='joint_state_publisher_sdf',
             arguments=[sdf_path],
-            remappings=[('joint_states', 'joint_states/sdf/from_cli')]),
+            remappings=[('joint_states', 'joint_states/sdf/from_cli')],
+            output=['screen']),
         Node(
             package='joint_state_publisher',
             executable='joint_state_publisher',
             name='joint_state_publisher_urdf',
             arguments=[urdf_path],
-            remappings=[('joint_states', 'joint_states/urdf/from_cli')]),
+            remappings=[('joint_states', 'joint_states/urdf/from_cli')],
+            output=['screen']),
         ExecuteProcess(cmd=ros2_topic_dae),
         ExecuteProcess(cmd=ros2_topic_sdf),
         ExecuteProcess(cmd=ros2_topic_urdf),
@@ -83,7 +86,8 @@ def generate_test_description():
             remappings=[
                 ('joint_states', 'joint_states/collada/from_topic'),
                 ('robot_description', 'robot_description/dae'),
-            ]),
+            ],
+            output=['screen']),
         Node(
             package='joint_state_publisher',
             executable='joint_state_publisher',
@@ -91,7 +95,8 @@ def generate_test_description():
             remappings=[
                 ('joint_states', 'joint_states/sdf/from_topic'),
                 ('robot_description', 'robot_description/sdf'),
-            ]),
+            ],
+            output=['screen']),
         Node(
             package='joint_state_publisher',
             executable='joint_state_publisher',
@@ -99,7 +104,8 @@ def generate_test_description():
             remappings=[
                 ('joint_states', 'joint_states/urdf/from_topic'),
                 ('robot_description', 'robot_description/urdf'),
-            ]),
+            ],
+            output=['screen']),
         launch_testing.actions.ReadyToTest(),
     ])
 
