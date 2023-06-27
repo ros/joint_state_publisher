@@ -67,7 +67,7 @@ class JointStatePublisher(rclpy.node.Node):
                 continue
             if child.localName == 'joint':
                 jtype = child.getAttribute('type')
-                if jtype in ('gearbox', 'revolute', 'ball', 'screw', 'universal', 'fixed'):
+                if jtype in ('gearbox', 'revolute2', 'ball', 'screw', 'universal', 'fixed'):
                     continue
                 name = child.getAttribute('name')
                 self.joint_list.append(name)
@@ -81,6 +81,8 @@ class JointStatePublisher(rclpy.node.Node):
                         limit = child.getElementsByTagName('limit')[0]
                         minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
                         maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
+                    except ValueError:
+                        self.get_logger().warn('%s limits are not valid!' % name)
                     except:
                         self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
                         continue
