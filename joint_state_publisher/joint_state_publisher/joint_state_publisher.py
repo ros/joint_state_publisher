@@ -67,24 +67,25 @@ class JointStatePublisher(rclpy.node.Node):
                 continue
             if child.localName == 'joint':
                 jtype = child.getAttribute('type')
-                if jtype in ['gearbox', 'revolute2', 'ball', 'screw', 'universal', 'fixed']:
+                if jtype in ('gearbox', 'revolute2', 'ball', 'screw', 'universal', 'fixed'):
                     continue
                 name = child.getAttribute('name')
                 self.joint_list.append(name)
+
+                # joint limits
                 if jtype == 'continuous':
                     minval = -math.pi
                     maxval = math.pi
                 else:
-                    # TODO actual limits
-                    minval = -math.pi  # xxx
-                    maxval = math.pi  # xxx
-                    # try:
-                    #     limit = child.getElementsByTagName('limit')[0]
-                    #     minval = float(limit.getAttribute('lower'))
-                    #     maxval = float(limit.getAttribute('upper'))
-                    # except:
-                    #     self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
-                    #     continue
+                    try:
+                        limit = child.getElementsByTagName('limit')[0]
+                        minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
+                        maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
+                    except ValueError:
+                        self.get_logger().warn('%s limits are not valid!' % name)
+                    except:
+                        self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
+                        continue
 
                 if self.zeros and name in self.zeros:
                     zeroval = self.zeros[name]
@@ -134,7 +135,7 @@ class JointStatePublisher(rclpy.node.Node):
                 continue
             if child.localName == 'joint':
                 jtype = child.getAttribute('type')
-                if jtype in ['fixed', 'floating', 'planar']:
+                if jtype in ('fixed', 'floating', 'planar'):
                     continue
                 name = child.getAttribute('name')
                 self.joint_list.append(name)
@@ -203,12 +204,16 @@ class JointStatePublisher(rclpy.node.Node):
         self.free_joints = {}
         self.joint_list = [] # for maintaining the original order of the joints
 
-        if robot.getElementsByTagName('sdf'):
+        # Get root tag to parse file format
+        root = robot.documentElement
+        if root.tagName == 'sdf':
             self.init_sdf(robot)
-        elif robot.getElementsByTagName('COLLADA'):
+        elif root.tagName == 'COLLADA':
             self.init_collada(robot)
-        else:
+        elif root.tagName == 'urdf':
             self.init_urdf(robot)
+        else:
+            self.get_logger().error('Cannot parse file of type %s' % root.tagName)
 
         if self.robot_description_update_cb is not None:
             self.robot_description_update_cb()
