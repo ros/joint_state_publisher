@@ -65,40 +65,42 @@ class JointStatePublisher(rclpy.node.Node):
         for child in robot.childNodes:
             if child.nodeType is child.TEXT_NODE:
                 continue
-            if child.localName == 'joint':
-                jtype = child.getAttribute('type')
-                if jtype in ('gearbox', 'revolute2', 'ball', 'screw', 'universal', 'fixed'):
+            if child.localName != 'joint':
+                continue
+            jtype = child.getAttribute('type')
+            if jtype in ('gearbox', 'revolute2', 'ball', 'screw', 'universal', 'fixed'):
+                continue
+            name = child.getAttribute('name')
+            self.joint_list.append(name)
+
+            # joint limits
+            if jtype == 'continuous':
+                minval = -math.pi
+                maxval = math.pi
+            else:
+                try:
+                    limit = child.getElementsByTagName('limit')[0]
+                    minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
+                    maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
+                except ValueError:
+                    self.get_logger().warn('%s limits are not valid!' % name)
                     continue
-                name = child.getAttribute('name')
-                self.joint_list.append(name)
+                except:
+                    self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
+                    continue
 
-                # joint limits
-                if jtype == 'continuous':
-                    minval = -math.pi
-                    maxval = math.pi
-                else:
-                    try:
-                        limit = child.getElementsByTagName('limit')[0]
-                        minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
-                        maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
-                    except ValueError:
-                        self.get_logger().warn('%s limits are not valid!' % name)
-                    except:
-                        self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
-                        continue
+            if self.zeros and name in self.zeros:
+                zeroval = self.zeros[name]
+            elif minval > 0 or maxval < 0:
+                zeroval = (maxval + minval)/2
+            else:
+                zeroval = 0
 
-                if self.zeros and name in self.zeros:
-                    zeroval = self.zeros[name]
-                elif minval > 0 or maxval < 0:
-                    zeroval = (maxval + minval)/2
-                else:
-                    zeroval = 0
+            joint = self._init_joint(minval, maxval, zeroval)
 
-                joint = self._init_joint(minval, maxval, zeroval)
-
-                if jtype == 'continuous':
-                    joint['continuous'] = True
-                self.free_joints[name] = joint
+            if jtype == 'continuous':
+                joint['continuous'] = True
+            self.free_joints[name] = joint
 
     def init_collada(self, robot):
         robot = robot.getElementsByTagName('kinematics_model')[0].getElementsByTagName('technique_common')[0]
@@ -114,11 +116,9 @@ class JointStatePublisher(rclpy.node.Node):
                     continue
 
                 if joint:
-                    limit_list = joint.getElementsByTagName('limits')
-                    if limit_list:
-                        limit = limit_list[0]
-                        minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
-                        maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
+                    limit = joint.getElementsByTagName('limits')[0]
+                    minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
+                    maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
                 if minval == maxval:  # this is a fixed joint
                     continue
 
@@ -214,6 +214,7 @@ class JointStatePublisher(rclpy.node.Node):
             self.init_urdf(robot)
         else:
             self.get_logger().error('Cannot parse file of type %s' % root.tagName)
+            return
 
         if self.robot_description_update_cb is not None:
             self.robot_description_update_cb()
@@ -262,7 +263,7 @@ class JointStatePublisher(rclpy.node.Node):
         except rclpy.exceptions.ParameterAlreadyDeclaredException:
             pass
 
-    def __init__(self, urdf_file):
+    def __init__(self, description_file):
         super().__init__('joint_state_publisher', automatically_declare_parameters_from_overrides=True)
 
         self.declare_ros_parameter('publish_default_efforts', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
@@ -297,9 +298,9 @@ class JointStatePublisher(rclpy.node.Node):
         self.robot_description_update_cb = None
 
 
-        if urdf_file is not None:
+        if description_file is not None:
             # If we were given a URDF file on the command-line, use that.
-            with open(urdf_file, 'r') as infp:
+            with open(description_file, 'r') as infp:
                 description = infp.read()
             self.configure_robot(description)
         else:
@@ -455,13 +456,13 @@ def main():
     # Strip off the ROS 2-specific command-line arguments
     stripped_args = rclpy.utilities.remove_ros_args(args=sys.argv)
     parser = argparse.ArgumentParser()
-    parser.add_argument('urdf_file', help='URDF file to use', nargs='?', default=None)
+    parser.add_argument('description_file', help='Robot description file to use', nargs='?', default=None)
 
     # Parse the remaining arguments, noting that the passed-in args must *not*
     # contain the name of the program.
     parsed_args = parser.parse_args(args=stripped_args[1:])
 
-    jsp = JointStatePublisher(parsed_args.urdf_file)
+    jsp = JointStatePublisher(parsed_args.description_file)
 
     try:
         rclpy.spin(jsp)
