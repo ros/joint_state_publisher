@@ -210,7 +210,7 @@ class JointStatePublisher(rclpy.node.Node):
             self.init_sdf(robot)
         elif root.tagName == 'COLLADA':
             self.init_collada(robot)
-        elif root.tagName == 'urdf':
+        elif root.tagName == 'urdf' or root.tagName == 'robot':
             self.init_urdf(robot)
         else:
             self.get_logger().error('Cannot parse file of type %s' % root.tagName)
