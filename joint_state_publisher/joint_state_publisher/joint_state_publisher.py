@@ -75,10 +75,12 @@ class JointStatePublisher(rclpy.node.Node):
 
             if joint:
                 limit_list = joint.getElementsByTagName('limits')
-                if limit_list:
-                    limit = limit_list[0]
-                    minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
-                    maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
+                if not limit_list:
+                    self.get_logger().warn('%s does not have specified limits!' % name)
+                    continue
+                limit = limit_list[0]
+                minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
+                maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
             if minval == maxval:  # this is a fixed joint
                 continue
 
@@ -99,7 +101,6 @@ class JointStatePublisher(rclpy.node.Node):
             if jtype in ['fixed', 'floating', 'planar']:
                 continue
             name = child.getAttribute('name')
-            self.joint_list.append(name)
             if jtype == 'continuous':
                 minval = -math.pi
                 maxval = math.pi
@@ -110,6 +111,9 @@ class JointStatePublisher(rclpy.node.Node):
                         limit = limit_list[0]
                         minval = float(limit.getAttribute('lower'))
                         maxval = float(limit.getAttribute('upper'))
+                except ValueError:
+                    self.get_logger().warn('%s limits are not valid!' % name)
+                    continue
                 except:
                     self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
                     continue
@@ -133,6 +137,8 @@ class JointStatePublisher(rclpy.node.Node):
 
                 self.dependent_joints[name] = entry
                 continue
+
+            self.joint_list.append(name)
 
             if name in self.dependent_joints:
                 continue
