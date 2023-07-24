@@ -79,9 +79,11 @@ class JointStatePublisher(rclpy.node.Node):
                 maxval = math.pi
             else:
                 try:
-                    limit = child.getElementsByTagName('limit')[0]
-                    minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
-                    maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
+                    limit_list = child.getElementsByTagName('limit')
+                    if limit_list:
+                        limit = limit_list[0]
+                        minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
+                        maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
                 except ValueError:
                     self.get_logger().warn('%s limits are not valid!' % name)
                     continue
