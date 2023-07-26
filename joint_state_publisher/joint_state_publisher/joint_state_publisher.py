@@ -64,30 +64,25 @@ class JointStatePublisher(rclpy.node.Node):
         for child in robot.childNodes:
             if child.nodeType is child.TEXT_NODE:
                 continue
-            if child.localName != 'joint':
-                continue
-            name = child.getAttribute('name')
-            if child.getElementsByTagName('revolute'):
-                joint = child.getElementsByTagName('revolute')[0]
-            else:
-                self.get_logger().warn('Unknown joint type %s', child)
-                continue
-
-            if joint:
-                limit_list = joint.getElementsByTagName('limits')
-                if not limit_list:
-                    self.get_logger().warn('%s does not have specified limits!' % name)
+            if child.localName == 'joint':
+                name = child.getAttribute('name')
+                if child.getElementsByTagName('revolute'):
+                    joint = child.getElementsByTagName('revolute')[0]
+                else:
+                    self.get_logger().warn('Unknown joint type %s', child)
                     continue
-                limit = limit_list[0]
-                minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
-                maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
-            if minval == maxval:  # this is a fixed joint
-                continue
 
-            self.joint_list.append(name)
-            minval *= math.pi/180.0
-            maxval *= math.pi/180.0
-            self.free_joints[name] = self._init_joint(minval, maxval, 0.0)
+                if joint:
+                    limit = joint.getElementsByTagName('limits')[0]
+                    minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
+                    maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
+                if minval == maxval:  # this is a fixed joint
+                    continue
+
+                self.joint_list.append(name)
+                minval *= math.pi/180.0
+                maxval *= math.pi/180.0
+                self.free_joints[name] = self._init_joint(minval, maxval, 0.0)
 
     def init_urdf(self, robot):
         robot = robot.getElementsByTagName('robot')[0]
