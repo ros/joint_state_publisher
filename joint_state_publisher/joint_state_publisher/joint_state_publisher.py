@@ -93,7 +93,7 @@ class JointStatePublisher(rclpy.node.Node):
             if child.localName != 'joint':
                 continue
             jtype = child.getAttribute('type')
-            if jtype in ['fixed', 'floating', 'planar']:
+            if jtype in ('fixed', 'floating', 'planar'):
                 continue
             name = child.getAttribute('name')
             if jtype == 'continuous':
@@ -101,14 +101,9 @@ class JointStatePublisher(rclpy.node.Node):
                 maxval = math.pi
             else:
                 try:
-                    limit_list = child.getElementsByTagName('limit')
-                    if limit_list:
-                        limit = limit_list[0]
+                    limit_list = child.getElementsByTagName('limit')[0]
                         minval = float(limit.getAttribute('lower'))
                         maxval = float(limit.getAttribute('upper'))
-                except ValueError:
-                    self.get_logger().warn('%s limits are not valid!' % name)
-                    continue
                 except:
                     self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
                     continue
