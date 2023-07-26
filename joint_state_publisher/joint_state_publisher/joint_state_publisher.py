@@ -101,9 +101,9 @@ class JointStatePublisher(rclpy.node.Node):
                 maxval = math.pi
             else:
                 try:
-                    limit_list = child.getElementsByTagName('limit')[0]
-                        minval = float(limit.getAttribute('lower'))
-                        maxval = float(limit.getAttribute('upper'))
+                    limit = child.getElementsByTagName('limit')[0]
+                    minval = float(limit.getAttribute('lower'))
+                    maxval = float(limit.getAttribute('upper'))
                 except:
                     self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
                     continue
@@ -116,6 +116,8 @@ class JointStatePublisher(rclpy.node.Node):
                 if tag.hasAttribute('soft_upper_limit'):
                     maxval = min(maxval, float(tag.getAttribute('soft_upper_limit')))
 
+            self.joint_list.append(name)
+
             mimic_tags = child.getElementsByTagName('mimic')
             if self.use_mimic and len(mimic_tags) == 1:
                 tag = mimic_tags[0]
@@ -127,8 +129,6 @@ class JointStatePublisher(rclpy.node.Node):
 
                 self.dependent_joints[name] = entry
                 continue
-
-            self.joint_list.append(name)
 
             if name in self.dependent_joints:
                 continue
