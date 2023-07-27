@@ -90,59 +90,61 @@ class JointStatePublisher(rclpy.node.Node):
         for child in robot.childNodes:
             if child.nodeType is child.TEXT_NODE:
                 continue
-            if child.localName == 'joint':
-                jtype = child.getAttribute('type')
-                if jtype in ['fixed', 'floating', 'planar']:
-                    continue
-                name = child.getAttribute('name')
-                self.joint_list.append(name)
-                if jtype == 'continuous':
-                    minval = -math.pi
-                    maxval = math.pi
-                else:
-                    try:
-                        limit = child.getElementsByTagName('limit')[0]
-                        minval = float(limit.getAttribute('lower'))
-                        maxval = float(limit.getAttribute('upper'))
-                    except:
-                        self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
-                        continue
-
-                safety_tags = child.getElementsByTagName('safety_controller')
-                if self.use_small and len(safety_tags) == 1:
-                    tag = safety_tags[0]
-                    if tag.hasAttribute('soft_lower_limit'):
-                        minval = max(minval, float(tag.getAttribute('soft_lower_limit')))
-                    if tag.hasAttribute('soft_upper_limit'):
-                        maxval = min(maxval, float(tag.getAttribute('soft_upper_limit')))
-
-                mimic_tags = child.getElementsByTagName('mimic')
-                if self.use_mimic and len(mimic_tags) == 1:
-                    tag = mimic_tags[0]
-                    entry = {'parent': tag.getAttribute('joint')}
-                    if tag.hasAttribute('multiplier'):
-                        entry['factor'] = float(tag.getAttribute('multiplier'))
-                    if tag.hasAttribute('offset'):
-                        entry['offset'] = float(tag.getAttribute('offset'))
-
-                    self.dependent_joints[name] = entry
+            if child.localName != 'joint':
+                continue
+            jtype = child.getAttribute('type')
+            if jtype in ('fixed', 'floating', 'planar'):
+                continue
+            name = child.getAttribute('name')
+            if jtype == 'continuous':
+                minval = -math.pi
+                maxval = math.pi
+            else:
+                try:
+                    limit = child.getElementsByTagName('limit')[0]
+                    minval = float(limit.getAttribute('lower'))
+                    maxval = float(limit.getAttribute('upper'))
+                except:
+                    self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
                     continue
 
-                if name in self.dependent_joints:
-                    continue
+            safety_tags = child.getElementsByTagName('safety_controller')
+            if self.use_small and len(safety_tags) == 1:
+                tag = safety_tags[0]
+                if tag.hasAttribute('soft_lower_limit'):
+                    minval = max(minval, float(tag.getAttribute('soft_lower_limit')))
+                if tag.hasAttribute('soft_upper_limit'):
+                    maxval = min(maxval, float(tag.getAttribute('soft_upper_limit')))
 
-                if self.zeros and name in self.zeros:
-                    zeroval = self.zeros[name]
-                elif minval > 0 or maxval < 0:
-                    zeroval = (maxval + minval)/2
-                else:
-                    zeroval = 0
+            self.joint_list.append(name)
 
-                joint = self._init_joint(minval, maxval, zeroval)
+            mimic_tags = child.getElementsByTagName('mimic')
+            if self.use_mimic and len(mimic_tags) == 1:
+                tag = mimic_tags[0]
+                entry = {'parent': tag.getAttribute('joint')}
+                if tag.hasAttribute('multiplier'):
+                    entry['factor'] = float(tag.getAttribute('multiplier'))
+                if tag.hasAttribute('offset'):
+                    entry['offset'] = float(tag.getAttribute('offset'))
 
-                if jtype == 'continuous':
-                    joint['continuous'] = True
-                self.free_joints[name] = joint
+                self.dependent_joints[name] = entry
+                continue
+
+            if name in self.dependent_joints:
+                continue
+
+            if self.zeros and name in self.zeros:
+                zeroval = self.zeros[name]
+            elif minval > 0 or maxval < 0:
+                zeroval = (maxval + minval)/2
+            else:
+                zeroval = 0
+
+            joint = self._init_joint(minval, maxval, zeroval)
+
+            if jtype == 'continuous':
+                joint['continuous'] = True
+            self.free_joints[name] = joint
 
     def configure_robot(self, description):
         self.get_logger().debug('Got description, configuring robot')
