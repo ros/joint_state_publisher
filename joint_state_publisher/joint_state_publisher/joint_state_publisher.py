@@ -71,7 +71,6 @@ class JointStatePublisher(rclpy.node.Node):
             if jtype in ('gearbox', 'revolute2', 'ball', 'screw', 'universal', 'fixed'):
                 continue
             name = child.getAttribute('name')
-            self.joint_list.append(name)
 
             # joint limits
             if jtype == 'continuous':
@@ -103,6 +102,7 @@ class JointStatePublisher(rclpy.node.Node):
             if jtype == 'continuous':
                 joint['continuous'] = True
             self.free_joints[name] = joint
+            self.joint_list.append(name)
 
     def init_collada(self, robot):
         robot = robot.getElementsByTagName('kinematics_model')[0].getElementsByTagName('technique_common')[0]
@@ -212,11 +212,8 @@ class JointStatePublisher(rclpy.node.Node):
             self.init_sdf(robot)
         elif root.tagName == 'COLLADA':
             self.init_collada(robot)
-        elif root.tagName == 'urdf' or root.tagName == 'robot':
-            self.init_urdf(robot)
         else:
-            self.get_logger().error('Cannot parse file of type %s' % root.tagName)
-            return
+            self.init_urdf(robot)
 
         if self.robot_description_update_cb is not None:
             self.robot_description_update_cb()
@@ -458,12 +455,14 @@ def main():
     # Strip off the ROS 2-specific command-line arguments
     stripped_args = rclpy.utilities.remove_ros_args(args=sys.argv)
     parser = argparse.ArgumentParser()
+    parser.add_argument('urdf_file', help='URDF file to use (deprecated, use "description_file" instead)', nargs='?', default=None)
     parser.add_argument('description_file', help='Robot description file to use', nargs='?', default=None)
 
     # Parse the remaining arguments, noting that the passed-in args must *not*
     # contain the name of the program.
     parsed_args = parser.parse_args(args=stripped_args[1:])
-
+    if not description_file:
+        parsed_args.description_file = parsed_args.urdf_file
     jsp = JointStatePublisher(parsed_args.description_file)
 
     try:
