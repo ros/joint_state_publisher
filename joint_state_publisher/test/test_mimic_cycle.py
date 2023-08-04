@@ -30,7 +30,7 @@ def generate_test_description():
     joint_state_publisher = Node(
         package='joint_state_publisher',
         executable='joint_state_publisher',
-        arguments=[os.path.join(test_urdfs_dir, 'mimic_cycle.urdf')])
+        arguments=['description_file', os.path.join(test_urdfs_dir, 'mimic_cycle.urdf')])
     return (
         LaunchDescription([joint_state_publisher, launch_testing.actions.ReadyToTest()]),
         {'joint_state_publisher': joint_state_publisher})

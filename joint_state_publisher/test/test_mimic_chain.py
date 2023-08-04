@@ -31,7 +31,7 @@ def generate_test_description():
         Node(
             package='joint_state_publisher',
             executable='joint_state_publisher',
-            arguments=[os.path.join(test_urdfs_dir, 'mimic_chain.urdf')]),
+            arguments=['description_file', os.path.join(test_urdfs_dir, 'mimic_chain.urdf')]),
         launch_testing.actions.ReadyToTest(),
     ])
 
