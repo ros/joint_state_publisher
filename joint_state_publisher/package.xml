@@ -19,6 +19,7 @@
   <exec_depend>std_msgs</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
   <test_depend>ament_xmllint</test_depend>
   <test_depend>python3-pytest</test_depend>
   <test_depend>launch_testing</test_depend>

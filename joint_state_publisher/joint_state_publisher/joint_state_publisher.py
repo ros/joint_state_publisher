@@ -34,18 +34,18 @@
 import argparse
 import math
 import sys
-import time
 import xml.dom.minidom
 
 # ROS 2 imports
+from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import rclpy
 import rclpy.node
-from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import sensor_msgs.msg
 import std_msgs.msg
 
 
 class JointStatePublisher(rclpy.node.Node):
+
     def get_param(self, name):
         return self.get_parameter(name).value
 
@@ -84,8 +84,9 @@ class JointStatePublisher(rclpy.node.Node):
                 except ValueError:
                     self.get_logger().warn('%s limits are not valid!' % name)
                     continue
-                except:
-                    self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
+                except Exception:
+                    self.get_logger().warn(
+                        '%s is not fixed, nor continuous, but limits are not specified!' % name)
                     continue
 
             if self.zeros and name in self.zeros:
@@ -103,8 +104,9 @@ class JointStatePublisher(rclpy.node.Node):
             self.joint_list.append(name)
 
     def init_collada(self, robot):
-        robot = robot.getElementsByTagName('kinematics_model')[0].getElementsByTagName('technique_common')[0]
-        for child in robot.childNodes:
+        kinematics_model = robot.getElementsByTagName('kinematics_model')[0]
+        technique_common = kinematics_model.getElementsByTagName('technique_common')[0]
+        for child in technique_common.childNodes:
             if child.nodeType is child.TEXT_NODE:
                 continue
             if child.localName == 'joint':
@@ -147,8 +149,9 @@ class JointStatePublisher(rclpy.node.Node):
                     limit = child.getElementsByTagName('limit')[0]
                     minval = float(limit.getAttribute('lower'))
                     maxval = float(limit.getAttribute('upper'))
-                except:
-                    self.get_logger().warn('%s is not fixed, nor continuous, but limits are not specified!' % name)
+                except Exception:
+                    self.get_logger().warn(
+                        '%s is not fixed, nor continuous, but limits are not specified!' % name)
                     continue
 
             safety_tags = child.getElementsByTagName('safety_controller')
@@ -204,7 +207,7 @@ class JointStatePublisher(rclpy.node.Node):
         # Make sure to clear out the old joints so we don't get duplicate joints
         # on a new robot description.
         self.free_joints = {}
-        self.joint_list = [] # for maintaining the original order of the joints
+        self.joint_list = []  # for maintaining the original order of the joints
 
         # Get root tag to parse file format
         root = robot.documentElement
@@ -227,6 +230,7 @@ class JointStatePublisher(rclpy.node.Node):
         # a map of name -> dict['parent': parent, factor: factor, offset: offset],
         # where both factor and offset are optional.  Thus we parse the values we
         # got into that structure.
+        allowed_joint_names = ('parent', 'factor', 'offset')
         for name, param in dependent_joints.items():
             # First split on the dots; there should be one and exactly one dot
             split = name.split('.')
@@ -234,15 +238,17 @@ class JointStatePublisher(rclpy.node.Node):
                 raise Exception("Invalid dependent_joint name '%s'" % (name))
             newkey = split[0]
             newvalue = split[1]
-            if newvalue not in ['parent', 'factor', 'offset']:
-                raise Exception("Invalid dependent_joint name '%s' (allowed values are 'parent', 'factor', and 'offset')" % (newvalue))
+            if newvalue not in allowed_joint_names:
+                allowed_joint_string = ', '.join(f"'{w}'" for w in allowed_joint_names)
+                raise Exception("Invalid dependent_joint name '%s' "
+                                '(allowed values are %s)' % (newvalue, allowed_joint_string))
             if newkey in dj:
                 dj[newkey].update({newvalue: param.value})
             else:
                 dj[newkey] = {newvalue: param.value}
 
         # Now ensure that there is at least a 'parent' in all keys
-        for name,outdict in dj.items():
+        for name, outdict in dj.items():
             if outdict.get('parent', None) is None:
                 raise Exception('All dependent_joints must at least have a parent')
 
@@ -263,23 +269,32 @@ class JointStatePublisher(rclpy.node.Node):
             pass
 
     def __init__(self, description_file):
-        super().__init__('joint_state_publisher', automatically_declare_parameters_from_overrides=True)
+        super().__init__('joint_state_publisher',
+                         automatically_declare_parameters_from_overrides=True)
 
-        self.declare_ros_parameter('publish_default_efforts', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
-        self.declare_ros_parameter('publish_default_positions', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
-        self.declare_ros_parameter('publish_default_velocities', False, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
-        self.declare_ros_parameter('rate', 10, ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
-        self.declare_ros_parameter('source_list', [], ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY))
-        self.declare_ros_parameter('use_mimic_tags', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
-        self.declare_ros_parameter('use_smallest_joint_limits', True, ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
-        self.declare_ros_parameter('delta', 0.0, ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE))
+        self.declare_ros_parameter('publish_default_efforts', False,
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+        self.declare_ros_parameter('publish_default_positions', True,
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+        self.declare_ros_parameter('publish_default_velocities', False,
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+        self.declare_ros_parameter('rate', 10,
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
+        self.declare_ros_parameter('source_list', [],
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY))
+        self.declare_ros_parameter('use_mimic_tags', True,
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+        self.declare_ros_parameter('use_smallest_joint_limits', True,
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
+        self.declare_ros_parameter('delta', 0.0,
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE))
         # In theory we would also declare 'dependent_joints' and 'zeros' here.
         # Since rclpy doesn't support maps natively, though, we just end up
         # letting 'automatically_declare_parameters_from_overrides' declare
         # any parameters for us.
 
         self.free_joints = {}
-        self.joint_list = [] # for maintaining the original order of the joints
+        self.joint_list = []  # for maintaining the original order of the joints
         self.dependent_joints = self.parse_dependent_joints()
         self.use_mimic = self.get_param('use_mimic_tags')
         self.use_small = self.get_param('use_smallest_joint_limits')
@@ -288,14 +303,13 @@ class JointStatePublisher(rclpy.node.Node):
         # get_parameters_by_prefix() returns a map of name -> Parameter
         # structures, but self.zeros is expected to be a list of name -> float;
         # fix that here.
-        self.zeros = {k:v.value for (k, v) in zeros.items()}
+        self.zeros = {k: v.value for (k, v) in zeros.items()}
 
         self.pub_def_positions = self.get_param('publish_default_positions')
         self.pub_def_vels = self.get_param('publish_default_velocities')
         self.pub_def_efforts = self.get_param('publish_default_efforts')
 
         self.robot_description_update_cb = None
-
 
         if description_file is not None:
             # If we were given a URDF file on the command-line, use that.
@@ -305,17 +319,22 @@ class JointStatePublisher(rclpy.node.Node):
         else:
             # Otherwise, subscribe to the '/robot_description' topic and wait
             # for a callback there
-            self.get_logger().info('Waiting for robot_description to be published on the robot_description topic...')
-            self.create_subscription(std_msgs.msg.String, 'robot_description',
+            self.get_logger().info(
+                'Waiting for robot_description to be published on the robot_description topic...')
+            qos = rclpy.qos.QoSProfile(depth=1,
+                                       durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL)
+            self.create_subscription(std_msgs.msg.String,
+                                     'robot_description',
                                      lambda msg: self.configure_robot(msg.data),
-                                     rclpy.qos.QoSProfile(depth=1, durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL))
+                                     qos)
 
         self.delta = self.get_param('delta')
 
         source_list = self.get_param('source_list')
         self.sources = []
         for source in source_list:
-            self.sources.append(self.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb, 10))
+            self.sources.append(self.create_subscription(sensor_msgs.msg.JointState, source,
+                                                         self.source_cb, 10))
 
         # The source_update_cb will be called at the end of self.source_cb.
         # The main purpose is to allow external observers (such as the
@@ -410,7 +429,8 @@ class JointStatePublisher(rclpy.node.Node):
                 while parent in self.dependent_joints:
                     if parent in recursive_mimic_chain_joints:
                         error_message = 'Found an infinite recursive mimic chain'
-                        self.get_logger().error(f'{error_message}: {recursive_mimic_chain_joints + [parent]}')
+                        self.get_logger().error(
+                            f'{error_message}: {recursive_mimic_chain_joints + [parent]}')
                         sys.exit(1)
                     recursive_mimic_chain_joints.append(parent)
                     param = self.dependent_joints[parent]
@@ -455,7 +475,8 @@ def main():
     # Strip off the ROS 2-specific command-line arguments
     stripped_args = rclpy.utilities.remove_ros_args(args=sys.argv)
     parser = argparse.ArgumentParser()
-    parser.add_argument('description_file', help='Robot description file to use', nargs='?', default=None)
+    parser.add_argument(
+        'description_file', help='Robot description file to use', nargs='?', default=None)
 
     # Parse the remaining arguments, noting that the passed-in args must *not*
     # contain the name of the program.
