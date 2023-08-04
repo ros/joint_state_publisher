@@ -59,21 +59,21 @@ def generate_test_description():
             package='joint_state_publisher',
             executable='joint_state_publisher',
             name='joint_state_publisher_collada',
-            arguments=['description_file', dae_path],
+            arguments=[dae_path],
             remappings=[('joint_states', 'joint_states/collada/from_cli')],
             output=['screen']),
         Node(
             package='joint_state_publisher',
             executable='joint_state_publisher',
             name='joint_state_publisher_sdf',
-            arguments=['description_file', sdf_path],
+            arguments=[sdf_path],
             remappings=[('joint_states', 'joint_states/sdf/from_cli')],
             output=['screen']),
         Node(
             package='joint_state_publisher',
             executable='joint_state_publisher',
             name='joint_state_publisher_urdf',
-            arguments=['description_file', urdf_path],
+            arguments=[urdf_path],
             remappings=[('joint_states', 'joint_states/urdf/from_cli')],
             output=['screen']),
         ExecuteProcess(cmd=ros2_topic_dae),
@@ -83,7 +83,6 @@ def generate_test_description():
             package='joint_state_publisher',
             executable='joint_state_publisher',
             name='joint_state_publisher_collada_from_topic',
-            arguments=['description_file', dae_path],
             remappings=[
                 ('joint_states', 'joint_states/collada/from_topic'),
                 ('robot_description', 'robot_description/dae'),
@@ -93,7 +92,6 @@ def generate_test_description():
             package='joint_state_publisher',
             executable='joint_state_publisher',
             name='joint_state_publisher_sdf_from_topic',
-            arguments=['description_file', sdf_path],
             remappings=[
                 ('joint_states', 'joint_states/sdf/from_topic'),
                 ('robot_description', 'robot_description/sdf'),
@@ -103,7 +101,6 @@ def generate_test_description():
             package='joint_state_publisher',
             executable='joint_state_publisher',
             name='joint_state_publisher_urdf_from_topic',
-            arguments=['description_file', urdf_path],
             remappings=[
                 ('joint_states', 'joint_states/urdf/from_topic'),
                 ('robot_description', 'robot_description/urdf'),

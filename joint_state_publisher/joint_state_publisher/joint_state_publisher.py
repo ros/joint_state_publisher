@@ -463,7 +463,7 @@ def main():
     # Parse the remaining arguments, noting that the passed-in args must *not*
     # contain the name of the program.
     parsed_args = parser.parse_args(args=stripped_args[1:])
-    if not parsed_args.description_file:
+    if not description_file:
         parsed_args.description_file = parsed_args.urdf_file
     jsp = JointStatePublisher(parsed_args.description_file)
 
