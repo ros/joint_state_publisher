@@ -353,16 +353,18 @@ class JointStatePublisher(rclpy.node.Node):
                 description = infp.read()
             self.configure_robot(description)
         else:
-            # Otherwise, subscribe to the '/robot_description' topic and wait
-            # for a callback there
             self.get_logger().info(
                 'Waiting for robot_description to be published on the robot_description topic...')
-            qos = rclpy.qos.QoSProfile(depth=1,
-                                       durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL)
-            self.create_subscription(std_msgs.msg.String,
-                                     'robot_description',
-                                     lambda msg: self.configure_robot(msg.data),
-                                     qos)
+
+        # In all cases, subscribe to the '/robot_description' topic; this allows us to get our
+        # initial configuration in the case we weren't given it on the command-line, and allows
+        # us to dynamically update later.
+        qos = rclpy.qos.QoSProfile(depth=1,
+                                   durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.create_subscription(std_msgs.msg.String,
+                                 'robot_description',
+                                 lambda msg: self.configure_robot(msg.data),
+                                 qos)
 
         self.delta = self.get_param('delta')
 
