@@ -59,14 +59,14 @@ class JointStatePublisher(rclpy.node.Node):
             joint['effort'] = 0.0
         return joint
 
-    def init_sdf(self, robot):
+    def init_sdf(self, xmldom):
         free_joints = {}
         joint_list = []
         dependent_joints = {}
 
-        robot = robot.getElementsByTagName('model')[0]
+        model = xmldom.getElementsByTagName('model')[0]
         # Find all non-fixed joints
-        for child in robot.childNodes:
+        for child in model.childNodes:
             if child.nodeType is child.TEXT_NODE:
                 continue
             if child.localName != 'joint':
@@ -109,12 +109,12 @@ class JointStatePublisher(rclpy.node.Node):
 
         return (free_joints, joint_list, dependent_joints)
 
-    def init_collada(self, robot):
+    def init_collada(self, xmldom):
         free_joints = {}
         joint_list = []
         dependent_joints = {}
 
-        kinematics_model = robot.getElementsByTagName('kinematics_model')[0]
+        kinematics_model = xmldom.getElementsByTagName('kinematics_model')[0]
         technique_common = kinematics_model.getElementsByTagName('technique_common')[0]
         for child in technique_common.childNodes:
             if child.nodeType is child.TEXT_NODE:
@@ -141,12 +141,12 @@ class JointStatePublisher(rclpy.node.Node):
 
         return (free_joints, joint_list, dependent_joints)
 
-    def init_urdf(self, robot):
+    def init_urdf(self, xmldom):
         free_joints = {}
         joint_list = []
         dependent_joints = {}
 
-        robot = robot.getElementsByTagName('robot')[0]
+        robot = xmldom.getElementsByTagName('robot')[0]
         # Find all non-fixed joints
         for child in robot.childNodes:
             if child.nodeType is child.TEXT_NODE:
@@ -213,23 +213,23 @@ class JointStatePublisher(rclpy.node.Node):
     def configure_robot(self, description):
         self.get_logger().debug('Got description, configuring robot')
         try:
-            robot = xml.dom.minidom.parseString(description)
+            xmldom = xml.dom.minidom.parseString(description)
         except xml.parsers.expat.ExpatError:
             # If the description fails to parse for some reason, print an error
             # and get out of here without doing further work.  If we were
             # already running with a description, we'll continue running with
             # that older one.
-            self.get_logger().warn('Invalid robot_description given, ignoring')
+            self.get_logger().warn('Invalid robot description given, ignoring')
             return
 
-        root = robot.documentElement
+        root = xmldom.documentElement
         try:
             if root.tagName == 'sdf':
-                (free_joints, joint_list, dependent_joints) = self.init_sdf(robot)
+                (free_joints, joint_list, dependent_joints) = self.init_sdf(xmldom)
             elif root.tagName == 'COLLADA':
-                (free_joints, joint_list, dependent_joints) = self.init_collada(robot)
+                (free_joints, joint_list, dependent_joints) = self.init_collada(xmldom)
             else:
-                (free_joints, joint_list, dependent_joints) = self.init_urdf(robot)
+                (free_joints, joint_list, dependent_joints) = self.init_urdf(xmldom)
         except:
             self.get_logger().warn('Invalid robot description given, ignoring')
             return
