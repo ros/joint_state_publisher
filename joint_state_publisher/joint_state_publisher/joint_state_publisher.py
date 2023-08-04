@@ -36,6 +36,9 @@ import math
 import sys
 import xml.dom.minidom
 
+# Third-party imports
+import packaging.version
+
 # ROS 2 imports
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import rclpy
@@ -113,6 +116,15 @@ class JointStatePublisher(rclpy.node.Node):
         free_joints = {}
         joint_list = []
         dependent_joints = {}
+
+        colladadom = xmldom.childNodes[0]
+
+        if not colladadom.hasAttribute('version'):
+            raise Exception('COLLADA file must have a version tag')
+
+        colladaversion = packaging.version.parse(colladadom.attributes['version'].value)
+        if colladaversion < packaging.version.parse('1.5.0'):
+            raise Exception('COLLADA file must be at least version 1.5.0')
 
         kinematics_model = xmldom.getElementsByTagName('kinematics_model')[0]
         technique_common = kinematics_model.getElementsByTagName('technique_common')[0]
@@ -230,8 +242,8 @@ class JointStatePublisher(rclpy.node.Node):
                 (free_joints, joint_list, dependent_joints) = self.init_collada(xmldom)
             else:
                 (free_joints, joint_list, dependent_joints) = self.init_urdf(xmldom)
-        except:
-            self.get_logger().warn('Invalid robot description given, ignoring')
+        except Exception as e:
+            self.get_logger().warn('Invalid robot description: %s' % (str(e)))
             return
 
         # Make sure to clear out the old joints so we don't get duplicate joints
