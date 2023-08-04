@@ -5,7 +5,7 @@ package_name = 'joint_state_publisher'
 
 setup(
     name=package_name,
-    version='2.3.0',
+    version='2.4.0',
     packages=find_packages(exclude=['test']),
     data_files=[
         ('share/ament_index/resource_index/packages',

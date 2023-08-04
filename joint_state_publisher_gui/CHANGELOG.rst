@@ -2,8 +2,8 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.4.0 (2023-08-04)
+------------------
 * Show 3 decimal places of joint angle (`#83 <https://github.com/ros/joint_state_publisher/issues/83>`_)
 * Contributors: Andy McEvoy
 

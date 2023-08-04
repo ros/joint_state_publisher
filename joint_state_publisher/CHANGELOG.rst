@@ -2,8 +2,8 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.4.0 (2023-08-04)
+------------------
 * Support for sdformat robot descriptions (`#55 <https://github.com/ros/joint_state_publisher/issues/55>`_)
 * Refactor urdf parser function (`#94 <https://github.com/ros/joint_state_publisher/issues/94>`_)
 * Gracefully handle SIGINT (`#86 <https://github.com/ros/joint_state_publisher/issues/86>`_)
