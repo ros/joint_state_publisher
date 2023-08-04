@@ -60,6 +60,10 @@ class JointStatePublisher(rclpy.node.Node):
         return joint
 
     def init_sdf(self, robot):
+        free_joints = {}
+        joint_list = []
+        dependent_joints = {}
+
         robot = robot.getElementsByTagName('model')[0]
         # Find all non-fixed joints
         for child in robot.childNodes:
@@ -100,10 +104,16 @@ class JointStatePublisher(rclpy.node.Node):
 
             if jtype == 'continuous':
                 joint['continuous'] = True
-            self.free_joints[name] = joint
-            self.joint_list.append(name)
+            free_joints[name] = joint
+            joint_list.append(name)
+
+        return (free_joints, joint_list, dependent_joints)
 
     def init_collada(self, robot):
+        free_joints = {}
+        joint_list = []
+        dependent_joints = {}
+
         kinematics_model = robot.getElementsByTagName('kinematics_model')[0]
         technique_common = kinematics_model.getElementsByTagName('technique_common')[0]
         for child in technique_common.childNodes:
@@ -124,12 +134,18 @@ class JointStatePublisher(rclpy.node.Node):
                 if minval == maxval:  # this is a fixed joint
                     continue
 
-                self.joint_list.append(name)
+                joint_list.append(name)
                 minval *= math.pi/180.0
                 maxval *= math.pi/180.0
-                self.free_joints[name] = self._init_joint(minval, maxval, 0.0)
+                free_joints[name] = self._init_joint(minval, maxval, 0.0)
+
+        return (free_joints, joint_list, dependent_joints)
 
     def init_urdf(self, robot):
+        free_joints = {}
+        joint_list = []
+        dependent_joints = {}
+
         robot = robot.getElementsByTagName('robot')[0]
         # Find all non-fixed joints
         for child in robot.childNodes:
@@ -162,7 +178,7 @@ class JointStatePublisher(rclpy.node.Node):
                 if tag.hasAttribute('soft_upper_limit'):
                     maxval = min(maxval, float(tag.getAttribute('soft_upper_limit')))
 
-            self.joint_list.append(name)
+            joint_list.append(name)
 
             mimic_tags = child.getElementsByTagName('mimic')
             if self.use_mimic and len(mimic_tags) == 1:
@@ -173,10 +189,10 @@ class JointStatePublisher(rclpy.node.Node):
                 if tag.hasAttribute('offset'):
                     entry['offset'] = float(tag.getAttribute('offset'))
 
-                self.dependent_joints[name] = entry
+                dependent_joints[name] = entry
                 continue
 
-            if name in self.dependent_joints:
+            if name in dependent_joints:
                 continue
 
             if self.zeros and name in self.zeros:
@@ -190,7 +206,9 @@ class JointStatePublisher(rclpy.node.Node):
 
             if jtype == 'continuous':
                 joint['continuous'] = True
-            self.free_joints[name] = joint
+            free_joints[name] = joint
+
+        return (free_joints, joint_list, dependent_joints)
 
     def configure_robot(self, description):
         self.get_logger().debug('Got description, configuring robot')
@@ -204,19 +222,23 @@ class JointStatePublisher(rclpy.node.Node):
             self.get_logger().warn('Invalid robot_description given, ignoring')
             return
 
+        root = robot.documentElement
+        try:
+            if root.tagName == 'sdf':
+                (free_joints, joint_list, dependent_joints) = self.init_sdf(robot)
+            elif root.tagName == 'COLLADA':
+                (free_joints, joint_list, dependent_joints) = self.init_collada(robot)
+            else:
+                (free_joints, joint_list, dependent_joints) = self.init_urdf(robot)
+        except:
+            self.get_logger().warn('Invalid robot description given, ignoring')
+            return
+
         # Make sure to clear out the old joints so we don't get duplicate joints
         # on a new robot description.
-        self.free_joints = {}
-        self.joint_list = []  # for maintaining the original order of the joints
-
-        # Get root tag to parse file format
-        root = robot.documentElement
-        if root.tagName == 'sdf':
-            self.init_sdf(robot)
-        elif root.tagName == 'COLLADA':
-            self.init_collada(robot)
-        else:
-            self.init_urdf(robot)
+        self.free_joints = free_joints
+        self.joint_list = joint_list  # for maintaining the original order of the joints
+        self.dependent_joints = dependent_joints
 
         if self.robot_description_update_cb is not None:
             self.robot_description_update_cb()
