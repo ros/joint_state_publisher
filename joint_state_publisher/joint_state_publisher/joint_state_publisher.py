@@ -78,11 +78,9 @@ class JointStatePublisher(rclpy.node.Node):
                 maxval = math.pi
             else:
                 try:
-                    limit_list = child.getElementsByTagName('limit')
-                    if limit_list:
-                        limit = limit_list[0]
-                        minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
-                        maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
+                    limit = child.getElementsByTagName('limit')[0]
+                    minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
+                    maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
                 except ValueError:
                     self.get_logger().warn('%s limits are not valid!' % name)
                     continue
@@ -457,14 +455,11 @@ def main():
     # Strip off the ROS 2-specific command-line arguments
     stripped_args = rclpy.utilities.remove_ros_args(args=sys.argv)
     parser = argparse.ArgumentParser()
-    parser.add_argument('urdf_file', help='URDF file to use (deprecated, use "description_file" instead)', nargs='?', default=None)
     parser.add_argument('description_file', help='Robot description file to use', nargs='?', default=None)
 
     # Parse the remaining arguments, noting that the passed-in args must *not*
     # contain the name of the program.
     parsed_args = parser.parse_args(args=stripped_args[1:])
-    if not description_file:
-        parsed_args.description_file = parsed_args.urdf_file
     jsp = JointStatePublisher(parsed_args.description_file)
 
     try:
