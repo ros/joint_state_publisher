@@ -131,25 +131,27 @@ class JointStatePublisher(rclpy.node.Node):
         for child in technique_common.childNodes:
             if child.nodeType is child.TEXT_NODE:
                 continue
-            if child.localName == 'joint':
-                name = child.getAttribute('name')
-                if child.getElementsByTagName('revolute'):
-                    joint = child.getElementsByTagName('revolute')[0]
-                else:
-                    self.get_logger().warn('Unknown joint type %s' % child)
-                    continue
+            if child.localName != 'joint':
+                continue
 
-                if joint:
-                    limit = joint.getElementsByTagName('limits')[0]
-                    minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
-                    maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
-                if minval == maxval:  # this is a fixed joint
-                    continue
+            name = child.getAttribute('name')
+            if child.getElementsByTagName('revolute'):
+                joint = child.getElementsByTagName('revolute')[0]
+            else:
+                self.get_logger().warn('Unknown joint type %s' % child)
+                continue
 
-                joint_list.append(name)
-                minval *= math.pi/180.0
-                maxval *= math.pi/180.0
-                free_joints[name] = self._init_joint(minval, maxval, 0.0)
+            if joint:
+                limit = joint.getElementsByTagName('limits')[0]
+                minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
+                maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
+            if minval == maxval:  # this is a fixed joint
+                continue
+
+            joint_list.append(name)
+            minval *= math.pi/180.0
+            maxval *= math.pi/180.0
+            free_joints[name] = self._init_joint(minval, maxval, 0.0)
 
         return (free_joints, joint_list, dependent_joints)
 
