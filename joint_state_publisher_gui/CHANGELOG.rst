@@ -2,6 +2,11 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Show 3 decimal places of joint angle (`#83 <https://github.com/ros/joint_state_publisher/issues/83>`_)
+* Contributors: Andy McEvoy
+
 2.3.0 (2022-04-21)
 ------------------
 * Fix use of joint_state_publisher on Ubuntu Jammy. (`#78 <https://github.com/ros/joint_state_publisher/issues/78>`_)

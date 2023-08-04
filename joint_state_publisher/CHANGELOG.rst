@@ -2,6 +2,13 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Support for sdformat robot descriptions (`#55 <https://github.com/ros/joint_state_publisher/issues/55>`_)
+* Refactor urdf parser function (`#94 <https://github.com/ros/joint_state_publisher/issues/94>`_)
+* Gracefully handle SIGINT (`#86 <https://github.com/ros/joint_state_publisher/issues/86>`_)
+* Contributors: Dharini Dutia, Shane Loretz, Will
+
 2.3.0 (2022-04-21)
 ------------------
 * Use underscores in setup.cfg. (`#76 <https://github.com/ros/joint_state_publisher/issues/76>`_)
