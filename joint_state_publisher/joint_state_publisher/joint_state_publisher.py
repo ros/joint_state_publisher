@@ -84,17 +84,11 @@ class JointStatePublisher(rclpy.node.Node):
                 minval = -math.pi
                 maxval = math.pi
             else:
-                try:
-                    limit = child.getElementsByTagName('limit')[0]
-                    minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
-                    maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
-                except ValueError:
-                    self.get_logger().warn('%s limits are not valid!' % name)
-                    continue
-                except Exception:
-                    self.get_logger().warn(
-                        '%s is not fixed, nor continuous, but limits are not specified!' % name)
-                    continue
+                # Limits are required, and required to be floats.  If any of this fails,
+                # this will throw an exception and we'll end up ignoring the entire SDF
+                limit = child.getElementsByTagName('limit')[0]
+                minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
+                maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
 
             if self.zeros and name in self.zeros:
                 zeroval = self.zeros[name]
@@ -175,14 +169,11 @@ class JointStatePublisher(rclpy.node.Node):
                 minval = -math.pi
                 maxval = math.pi
             else:
-                try:
-                    limit = child.getElementsByTagName('limit')[0]
-                    minval = float(limit.getAttribute('lower'))
-                    maxval = float(limit.getAttribute('upper'))
-                except Exception:
-                    self.get_logger().warn(
-                        '%s is not fixed, nor continuous, but limits are not specified!' % name)
-                    continue
+                # Limits are required, and required to be floats.  If any of this fails,
+                # this will throw an exception and we'll end up ignoring the entire URDF
+                limit = child.getElementsByTagName('limit')[0]
+                minval = float(limit.getAttribute('lower'))
+                maxval = float(limit.getAttribute('upper'))
 
             safety_tags = child.getElementsByTagName('safety_controller')
             if self.use_small and len(safety_tags) == 1:
@@ -234,7 +225,7 @@ class JointStatePublisher(rclpy.node.Node):
             # already running with a description, we'll continue running with
             # that older one.
             self.get_logger().warn('Invalid robot description given, ignoring')
-            return
+            return False
 
         root = xmldom.documentElement
         try:
@@ -246,7 +237,7 @@ class JointStatePublisher(rclpy.node.Node):
                 (free_joints, joint_list, dependent_joints) = self.init_urdf(xmldom)
         except Exception as e:
             self.get_logger().warn('Invalid robot description: %s' % (str(e)))
-            return
+            return False
 
         # Make sure to clear out the old joints so we don't get duplicate joints
         # on a new robot description.
@@ -256,6 +247,8 @@ class JointStatePublisher(rclpy.node.Node):
 
         if self.robot_description_update_cb is not None:
             self.robot_description_update_cb()
+
+        return True
 
     def parse_dependent_joints(self):
         dj = {}
@@ -351,7 +344,8 @@ class JointStatePublisher(rclpy.node.Node):
             # If we were given a URDF file on the command-line, use that.
             with open(description_file, 'r') as infp:
                 description = infp.read()
-            self.configure_robot(description)
+            if not self.configure_robot(description):
+                raise Exception('Failed to parse given description file')
         else:
             self.get_logger().info(
                 'Waiting for robot_description to be published on the robot_description topic...')
