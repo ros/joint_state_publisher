@@ -47,6 +47,14 @@ import sensor_msgs.msg
 import std_msgs.msg
 
 
+def _convert_to_float(name, jtype, limit_name, input_string):
+    try:
+        return float(input_string)
+    except ValueError:
+        raise Exception(
+            f'"{limit_name}" limit must be a float for joint "{name}" of type "{jtype}"')
+
+
 class JointStatePublisher(rclpy.node.Node):
 
     def get_param(self, name):
@@ -84,11 +92,24 @@ class JointStatePublisher(rclpy.node.Node):
                 minval = -math.pi
                 maxval = math.pi
             else:
-                # Limits are required, and required to be floats.  If any of this fails,
-                # this will throw an exception and we'll end up ignoring the entire SDF
-                limit = child.getElementsByTagName('limit')[0]
-                minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
-                maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
+                # Limits are required, and required to be floats.
+                limit_list = child.getElementsByTagName('limit')
+                if not limit_list:
+                    raise Exception(
+                        f'Limits must be specified for joint "{name}" of type "{jtype}"')
+                limit = limit_list[0]
+
+                lower_list = limit.getElementsByTagName('lower')
+                if not lower_list:
+                    raise Exception(f'"lower" limit missing for joint "{name}" of type "{jtype}"')
+                lower = lower_list[0]
+                minval = _convert_to_float(name, jtype, 'lower', lower.firstChild.data)
+
+                upper_list = limit.getElementsByTagName('upper')
+                if not upper_list:
+                    raise Exception(f'"upper" limit missing for joint "{name}" of type "{jtype}"')
+                upper = upper_list[0]
+                maxval = _convert_to_float(name, jtype, 'upper', upper.firstChild.data)
 
             if self.zeros and name in self.zeros:
                 zeroval = self.zeros[name]
@@ -114,14 +135,21 @@ class JointStatePublisher(rclpy.node.Node):
         colladadom = xmldom.childNodes[0]
 
         if not colladadom.hasAttribute('version'):
-            raise Exception('COLLADA file must have a version tag')
+            raise Exception('COLLADA must have a version tag')
 
         colladaversion = packaging.version.parse(colladadom.attributes['version'].value)
         if colladaversion < packaging.version.parse('1.5.0'):
-            raise Exception('COLLADA file must be at least version 1.5.0')
+            raise Exception('COLLADA must be at least version 1.5.0')
 
-        kinematics_model = xmldom.getElementsByTagName('kinematics_model')[0]
-        technique_common = kinematics_model.getElementsByTagName('technique_common')[0]
+        kinematics_model_list = xmldom.getElementsByTagName('kinematics_model')
+        if not kinematics_model_list:
+            raise Exception('COLLADA missing "kinematics_model"')
+        kinematics_model = kinematics_model_list[0]
+        technique_common_list = kinematics_model.getElementsByTagName('technique_common')
+        if not technique_common_list:
+            raise Exception('COLLADA missing "technique_common"')
+        technique_common = technique_common_list[0]
+
         for child in technique_common.childNodes:
             if child.nodeType is child.TEXT_NODE:
                 continue
@@ -129,16 +157,29 @@ class JointStatePublisher(rclpy.node.Node):
                 continue
 
             name = child.getAttribute('name')
-            if child.getElementsByTagName('revolute'):
-                joint = child.getElementsByTagName('revolute')[0]
-            else:
-                self.get_logger().warn('Unknown joint type %s' % child)
+            revolute_list = child.getElementsByTagName('revolute')
+            if not revolute_list:
                 continue
+            revolute = revolute_list[0]
 
-            if joint:
-                limit = joint.getElementsByTagName('limits')[0]
-                minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
-                maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
+            limit_list = revolute.getElementsByTagName('limits')
+            if not limit_list:
+                raise Exception(f'Limits must be specified for joint "{name}"')
+
+            limit = limit_list[0]
+
+            min_list = limit.getElementsByTagName('min')
+            if not min_list:
+                raise Exception(f'"min" limit missing for joint "{name}"')
+            minval = _convert_to_float(name, 'revolute', 'min',
+                                       min_list[0].childNodes[0].nodeValue)
+
+            max_list = limit.getElementsByTagName('max')
+            if not max_list:
+                raise Exception(f'"max" limit missing for joint "{name}"')
+            maxval = _convert_to_float(name, 'revolute', 'max',
+                                       max_list[0].childNodes[0].nodeValue)
+
             if minval == maxval:  # this is a fixed joint
                 continue
 
@@ -169,11 +210,21 @@ class JointStatePublisher(rclpy.node.Node):
                 minval = -math.pi
                 maxval = math.pi
             else:
-                # Limits are required, and required to be floats.  If any of this fails,
-                # this will throw an exception and we'll end up ignoring the entire URDF
-                limit = child.getElementsByTagName('limit')[0]
-                minval = float(limit.getAttribute('lower'))
-                maxval = float(limit.getAttribute('upper'))
+                # Limits are required, and required to be floats.
+                limit_list = child.getElementsByTagName('limit')
+                if not limit_list:
+                    raise Exception(
+                        f'Limits must be specified for joint "{name}" of type "{jtype}"')
+
+                limit = limit_list[0]
+
+                if not limit.hasAttribute('lower'):
+                    raise Exception(f'"lower" limit missing for joint "{name}" of type "{jtype}"')
+                minval = _convert_to_float(name, jtype, 'lower', limit.getAttribute('lower'))
+
+                if not limit.hasAttribute('upper'):
+                    raise Exception(f'"upper" limit missing for joint "{name}" of type "{jtype}"')
+                maxval = _convert_to_float(name, jtype, 'upper', limit.getAttribute('upper'))
 
             safety_tags = child.getElementsByTagName('safety_controller')
             if self.use_small and len(safety_tags) == 1:
