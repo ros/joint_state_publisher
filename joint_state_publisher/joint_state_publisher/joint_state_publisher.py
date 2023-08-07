@@ -112,7 +112,7 @@ class JointStatePublisher(rclpy.node.Node):
                 if child.getElementsByTagName('revolute'):
                     joint = child.getElementsByTagName('revolute')[0]
                 else:
-                    self.get_logger().warn('Unknown joint type %s', child)
+                    self.get_logger().warn('Unknown joint type %s' % child)
                     continue
 
                 if joint:
