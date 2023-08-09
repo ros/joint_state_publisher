@@ -45,7 +45,7 @@ def generate_test_description():
         urdf_text = urdf_file.read()
 
     dae_yaml = yaml.dump({'data': dae_text})
-    sdf_yaml =  yaml.dump({'data': sdf_text})
+    sdf_yaml = yaml.dump({'data': sdf_text})
     urdf_yaml = yaml.dump({'data': urdf_text})
 
     ros2_topic_cmd = ['ros2', 'topic', 'pub', '--qos-durability', 'transient_local']

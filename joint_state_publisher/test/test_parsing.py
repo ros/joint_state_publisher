@@ -365,7 +365,7 @@ def test_collada_revolute_no_limits(tmpdir, rclpy_fixture):
     collada_filename.write_text(collada, encoding='utf-8')
 
     with pytest.raises(IndexError) as excinfo:
-        jsp = joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
+        joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
     assert(str(excinfo.value) == 'list index out of range')
 
 
@@ -392,7 +392,7 @@ def test_collada_revolute_without_min(tmpdir, rclpy_fixture):
     collada_filename.write_text(collada, encoding='utf-8')
 
     with pytest.raises(IndexError) as excinfo:
-        jsp = joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
+        joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
     assert(str(excinfo.value) == 'list index out of range')
 
 
@@ -419,7 +419,7 @@ def test_collada_revolute_without_max(tmpdir, rclpy_fixture):
     collada_filename.write_text(collada, encoding='utf-8')
 
     with pytest.raises(IndexError) as excinfo:
-        jsp = joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
+        joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
     assert(str(excinfo.value) == 'list index out of range')
 
 
@@ -447,7 +447,7 @@ def test_collada_revolute_with_bogus_min(tmpdir, rclpy_fixture):
     collada_filename.write_text(collada, encoding='utf-8')
 
     with pytest.raises(ValueError) as excinfo:
-        jsp = joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
+        joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
     assert(str(excinfo.value) == "could not convert string to float: 'foo'")
 
 
@@ -475,7 +475,7 @@ def test_collada_revolute_with_bogus_max(tmpdir, rclpy_fixture):
     collada_filename.write_text(collada, encoding='utf-8')
 
     with pytest.raises(ValueError) as excinfo:
-        jsp = joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
+        joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
     assert(str(excinfo.value) == "could not convert string to float: 'foo'")
 
 
