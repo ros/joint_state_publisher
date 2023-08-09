@@ -39,7 +39,9 @@ import xml.dom.minidom
 
 # ROS 2 imports
 import rclpy
+import rclpy.qos
 import rclpy.node
+from rclpy.qos_overriding_options import QoSOverridingOptions
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import sensor_msgs.msg
 import std_msgs.msg
@@ -315,7 +317,9 @@ class JointStatePublisher(rclpy.node.Node):
         source_list = self.get_param('source_list')
         self.sources = []
         for source in source_list:
-            self.sources.append(self.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb, 10))
+            self.sources.append(self.create_subscription(sensor_msgs.msg.JointState, source, self.source_cb,
+                                                         rclpy.qos.qos_profile_sensor_data,
+                                                         qos_overriding_options=QoSOverridingOptions.with_default_policies()))
 
         # The source_update_cb will be called at the end of self.source_cb.
         # The main purpose is to allow external observers (such as the
