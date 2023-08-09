@@ -50,9 +50,9 @@ import std_msgs.msg
 def _convert_to_float(name, jtype, limit_name, input_string):
     try:
         return float(input_string)
-    except ValueError:
+    except ValueError as e:
         raise Exception(
-            f'"{limit_name}" limit must be a float for joint "{name}" of type "{jtype}"')
+            f'"{limit_name}" limit must be a float for joint "{name}" of type "{jtype}"') from e
 
 
 class JointStatePublisher(rclpy.node.Node):
@@ -75,7 +75,10 @@ class JointStatePublisher(rclpy.node.Node):
         joint_list = []
         dependent_joints = {}
 
-        model = xmldom.getElementsByTagName('model')[0]
+        model_list = xmldom.getElementsByTagName('model')
+        if not model_list:
+            raise Exception('SDF must have a "model" tag')
+        model = model_list[0]
         # Find all non-fixed joints
         for child in model.childNodes:
             if child.nodeType is child.TEXT_NODE:
@@ -101,13 +104,15 @@ class JointStatePublisher(rclpy.node.Node):
 
                 lower_list = limit.getElementsByTagName('lower')
                 if not lower_list:
-                    raise Exception(f'"lower" limit missing for joint "{name}" of type "{jtype}"')
+                    raise Exception(
+                        f'"lower" limit must be specified for joint "{name}" of type "{jtype}"')
                 lower = lower_list[0]
                 minval = _convert_to_float(name, jtype, 'lower', lower.firstChild.data)
 
                 upper_list = limit.getElementsByTagName('upper')
                 if not upper_list:
-                    raise Exception(f'"upper" limit missing for joint "{name}" of type "{jtype}"')
+                    raise Exception(
+                        f'"upper" limit must be specified for joint "{name}" of type "{jtype}"')
                 upper = upper_list[0]
                 maxval = _convert_to_float(name, jtype, 'upper', upper.firstChild.data)
 
@@ -143,11 +148,11 @@ class JointStatePublisher(rclpy.node.Node):
 
         kinematics_model_list = xmldom.getElementsByTagName('kinematics_model')
         if not kinematics_model_list:
-            raise Exception('COLLADA missing "kinematics_model"')
+            raise Exception('COLLADA must have a "kinematics_model" tag')
         kinematics_model = kinematics_model_list[0]
         technique_common_list = kinematics_model.getElementsByTagName('technique_common')
         if not technique_common_list:
-            raise Exception('COLLADA missing "technique_common"')
+            raise Exception('COLLADA must have a "technique_common" tag')
         technique_common = technique_common_list[0]
 
         for child in technique_common.childNodes:
@@ -164,19 +169,21 @@ class JointStatePublisher(rclpy.node.Node):
 
             limit_list = revolute.getElementsByTagName('limits')
             if not limit_list:
-                raise Exception(f'Limits must be specified for joint "{name}"')
+                raise Exception(f'Limits must be specified for joint "{name}" of type "revolute"')
 
             limit = limit_list[0]
 
             min_list = limit.getElementsByTagName('min')
             if not min_list:
-                raise Exception(f'"min" limit missing for joint "{name}"')
+                raise Exception(
+                    f'"min" limit must be specified for joint "{name}" of type "revolute"')
             minval = _convert_to_float(name, 'revolute', 'min',
                                        min_list[0].childNodes[0].nodeValue)
 
             max_list = limit.getElementsByTagName('max')
             if not max_list:
-                raise Exception(f'"max" limit missing for joint "{name}"')
+                raise Exception(
+                    f'"max" limit must be specified for joint "{name}" of type "revolute"')
             maxval = _convert_to_float(name, 'revolute', 'max',
                                        max_list[0].childNodes[0].nodeValue)
 
@@ -195,7 +202,10 @@ class JointStatePublisher(rclpy.node.Node):
         joint_list = []
         dependent_joints = {}
 
-        robot = xmldom.getElementsByTagName('robot')[0]
+        robot_list = xmldom.getElementsByTagName('robot')
+        if not robot_list:
+            raise Exception('URDF must have a "robot" tag')
+        robot = robot_list[0]
         # Find all non-fixed joints
         for child in robot.childNodes:
             if child.nodeType is child.TEXT_NODE:
@@ -219,11 +229,13 @@ class JointStatePublisher(rclpy.node.Node):
                 limit = limit_list[0]
 
                 if not limit.hasAttribute('lower'):
-                    raise Exception(f'"lower" limit missing for joint "{name}" of type "{jtype}"')
+                    raise Exception(
+                        f'"lower" limit must be specified for joint "{name}" of type "{jtype}"')
                 minval = _convert_to_float(name, jtype, 'lower', limit.getAttribute('lower'))
 
                 if not limit.hasAttribute('upper'):
-                    raise Exception(f'"upper" limit missing for joint "{name}" of type "{jtype}"')
+                    raise Exception(
+                        f'"upper" limit must be specified for joint "{name}" of type "{jtype}"')
                 maxval = _convert_to_float(name, jtype, 'upper', limit.getAttribute('upper'))
 
             safety_tags = child.getElementsByTagName('safety_controller')
@@ -268,38 +280,22 @@ class JointStatePublisher(rclpy.node.Node):
 
     def configure_robot(self, description):
         self.get_logger().debug('Got description, configuring robot')
-        try:
-            xmldom = xml.dom.minidom.parseString(description)
-        except xml.parsers.expat.ExpatError:
-            # If the description fails to parse for some reason, print an error
-            # and get out of here without doing further work.  If we were
-            # already running with a description, we'll continue running with
-            # that older one.
-            self.get_logger().warn('Invalid robot description given, ignoring')
-            return False
+        xmldom = xml.dom.minidom.parseString(description)
 
         root = xmldom.documentElement
-        try:
-            if root.tagName == 'sdf':
-                (free_joints, joint_list, dependent_joints) = self.init_sdf(xmldom)
-            elif root.tagName == 'COLLADA':
-                (free_joints, joint_list, dependent_joints) = self.init_collada(xmldom)
-            else:
-                (free_joints, joint_list, dependent_joints) = self.init_urdf(xmldom)
-        except Exception as e:
-            self.get_logger().warn('Invalid robot description: %s' % (str(e)))
-            return False
+        if root.tagName == 'sdf':
+            (free_joints, joint_list, dependent_joints) = self.init_sdf(xmldom)
+        elif root.tagName == 'COLLADA':
+            (free_joints, joint_list, dependent_joints) = self.init_collada(xmldom)
+        else:
+            (free_joints, joint_list, dependent_joints) = self.init_urdf(xmldom)
 
-        # Make sure to clear out the old joints so we don't get duplicate joints
-        # on a new robot description.
         self.free_joints = free_joints
         self.joint_list = joint_list  # for maintaining the original order of the joints
         self.dependent_joints = dependent_joints
 
         if self.robot_description_update_cb is not None:
             self.robot_description_update_cb()
-
-        return True
 
     def parse_dependent_joints(self):
         dj = {}
@@ -348,6 +344,12 @@ class JointStatePublisher(rclpy.node.Node):
         except rclpy.exceptions.ParameterAlreadyDeclaredException:
             pass
 
+    def robot_description_cb(self, msg):
+        try:
+            self.configure_robot(msg.data)
+        except Exception as e:
+            self.get_logger().warn(str(e))
+
     def __init__(self, description_file):
         super().__init__('joint_state_publisher',
                          automatically_declare_parameters_from_overrides=True)
@@ -395,8 +397,7 @@ class JointStatePublisher(rclpy.node.Node):
             # If we were given a URDF file on the command-line, use that.
             with open(description_file, 'r') as infp:
                 description = infp.read()
-            if not self.configure_robot(description):
-                raise Exception('Failed to parse given description file')
+            self.configure_robot(description)
         else:
             self.get_logger().info(
                 'Waiting for robot_description to be published on the robot_description topic...')
@@ -408,7 +409,7 @@ class JointStatePublisher(rclpy.node.Node):
                                    durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(std_msgs.msg.String,
                                  'robot_description',
-                                 lambda msg: self.configure_robot(msg.data),
+                                 lambda msg: self.robot_description_cb(msg),
                                  qos)
 
         self.delta = self.get_param('delta')
