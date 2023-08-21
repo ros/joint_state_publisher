@@ -36,12 +36,23 @@ import math
 import sys
 import xml.dom.minidom
 
+# Third-party imports
+import packaging.version
+
 # ROS 2 imports
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import rclpy
 import rclpy.node
 import sensor_msgs.msg
 import std_msgs.msg
+
+
+def _convert_to_float(name, jtype, limit_name, input_string):
+    try:
+        return float(input_string)
+    except ValueError as e:
+        raise Exception(
+            f'"{limit_name}" limit must be a float for joint "{name}" of type "{jtype}"') from e
 
 
 class JointStatePublisher(rclpy.node.Node):
@@ -59,10 +70,17 @@ class JointStatePublisher(rclpy.node.Node):
             joint['effort'] = 0.0
         return joint
 
-    def init_sdf(self, robot):
-        robot = robot.getElementsByTagName('model')[0]
+    def init_sdf(self, xmldom):
+        free_joints = {}
+        joint_list = []
+        dependent_joints = {}
+
+        model_list = xmldom.getElementsByTagName('model')
+        if not model_list:
+            raise Exception('SDF must have a "model" tag')
+        model = model_list[0]
         # Find all non-fixed joints
-        for child in robot.childNodes:
+        for child in model.childNodes:
             if child.nodeType is child.TEXT_NODE:
                 continue
             if child.localName != 'joint':
@@ -77,17 +95,26 @@ class JointStatePublisher(rclpy.node.Node):
                 minval = -math.pi
                 maxval = math.pi
             else:
-                try:
-                    limit = child.getElementsByTagName('limit')[0]
-                    minval = float(limit.getElementsByTagName('lower')[0].firstChild.data)
-                    maxval = float(limit.getElementsByTagName('upper')[0].firstChild.data)
-                except ValueError:
-                    self.get_logger().warn('%s limits are not valid!' % name)
-                    continue
-                except Exception:
-                    self.get_logger().warn(
-                        '%s is not fixed, nor continuous, but limits are not specified!' % name)
-                    continue
+                # Limits are required, and required to be floats.
+                limit_list = child.getElementsByTagName('limit')
+                if not limit_list:
+                    raise Exception(
+                        f'Limits must be specified for joint "{name}" of type "{jtype}"')
+                limit = limit_list[0]
+
+                lower_list = limit.getElementsByTagName('lower')
+                if not lower_list:
+                    raise Exception(
+                        f'"lower" limit must be specified for joint "{name}" of type "{jtype}"')
+                lower = lower_list[0]
+                minval = _convert_to_float(name, jtype, 'lower', lower.firstChild.data)
+
+                upper_list = limit.getElementsByTagName('upper')
+                if not upper_list:
+                    raise Exception(
+                        f'"upper" limit must be specified for joint "{name}" of type "{jtype}"')
+                upper = upper_list[0]
+                maxval = _convert_to_float(name, jtype, 'upper', upper.firstChild.data)
 
             if self.zeros and name in self.zeros:
                 zeroval = self.zeros[name]
@@ -100,37 +127,85 @@ class JointStatePublisher(rclpy.node.Node):
 
             if jtype == 'continuous':
                 joint['continuous'] = True
-            self.free_joints[name] = joint
-            self.joint_list.append(name)
+            free_joints[name] = joint
+            joint_list.append(name)
 
-    def init_collada(self, robot):
-        kinematics_model = robot.getElementsByTagName('kinematics_model')[0]
-        technique_common = kinematics_model.getElementsByTagName('technique_common')[0]
+        return (free_joints, joint_list, dependent_joints)
+
+    def init_collada(self, xmldom):
+        free_joints = {}
+        joint_list = []
+        dependent_joints = {}
+
+        colladadom = xmldom.childNodes[0]
+
+        if not colladadom.hasAttribute('version'):
+            raise Exception('COLLADA must have a version tag')
+
+        colladaversion = packaging.version.parse(colladadom.attributes['version'].value)
+        if colladaversion < packaging.version.parse('1.5.0'):
+            raise Exception('COLLADA must be at least version 1.5.0')
+
+        kinematics_model_list = xmldom.getElementsByTagName('kinematics_model')
+        if not kinematics_model_list:
+            raise Exception('COLLADA must have a "kinematics_model" tag')
+        kinematics_model = kinematics_model_list[0]
+        technique_common_list = kinematics_model.getElementsByTagName('technique_common')
+        if not technique_common_list:
+            raise Exception('COLLADA must have a "technique_common" tag')
+        technique_common = technique_common_list[0]
+
         for child in technique_common.childNodes:
             if child.nodeType is child.TEXT_NODE:
                 continue
-            if child.localName == 'joint':
-                name = child.getAttribute('name')
-                if child.getElementsByTagName('revolute'):
-                    joint = child.getElementsByTagName('revolute')[0]
-                else:
-                    self.get_logger().warn('Unknown joint type %s' % child)
-                    continue
+            if child.localName != 'joint':
+                continue
 
-                if joint:
-                    limit = joint.getElementsByTagName('limits')[0]
-                    minval = float(limit.getElementsByTagName('min')[0].childNodes[0].nodeValue)
-                    maxval = float(limit.getElementsByTagName('max')[0].childNodes[0].nodeValue)
-                if minval == maxval:  # this is a fixed joint
-                    continue
+            name = child.getAttribute('name')
+            revolute_list = child.getElementsByTagName('revolute')
+            if not revolute_list:
+                continue
+            revolute = revolute_list[0]
 
-                self.joint_list.append(name)
-                minval *= math.pi/180.0
-                maxval *= math.pi/180.0
-                self.free_joints[name] = self._init_joint(minval, maxval, 0.0)
+            limit_list = revolute.getElementsByTagName('limits')
+            if not limit_list:
+                raise Exception(f'Limits must be specified for joint "{name}" of type "revolute"')
 
-    def init_urdf(self, robot):
-        robot = robot.getElementsByTagName('robot')[0]
+            limit = limit_list[0]
+
+            min_list = limit.getElementsByTagName('min')
+            if not min_list:
+                raise Exception(
+                    f'"min" limit must be specified for joint "{name}" of type "revolute"')
+            minval = _convert_to_float(name, 'revolute', 'min',
+                                       min_list[0].childNodes[0].nodeValue)
+
+            max_list = limit.getElementsByTagName('max')
+            if not max_list:
+                raise Exception(
+                    f'"max" limit must be specified for joint "{name}" of type "revolute"')
+            maxval = _convert_to_float(name, 'revolute', 'max',
+                                       max_list[0].childNodes[0].nodeValue)
+
+            if minval == maxval:  # this is a fixed joint
+                continue
+
+            joint_list.append(name)
+            minval *= math.pi/180.0
+            maxval *= math.pi/180.0
+            free_joints[name] = self._init_joint(minval, maxval, 0.0)
+
+        return (free_joints, joint_list, dependent_joints)
+
+    def init_urdf(self, xmldom):
+        free_joints = {}
+        joint_list = []
+        dependent_joints = {}
+
+        robot_list = xmldom.getElementsByTagName('robot')
+        if not robot_list:
+            raise Exception('URDF must have a "robot" tag')
+        robot = robot_list[0]
         # Find all non-fixed joints
         for child in robot.childNodes:
             if child.nodeType is child.TEXT_NODE:
@@ -145,14 +220,23 @@ class JointStatePublisher(rclpy.node.Node):
                 minval = -math.pi
                 maxval = math.pi
             else:
-                try:
-                    limit = child.getElementsByTagName('limit')[0]
-                    minval = float(limit.getAttribute('lower'))
-                    maxval = float(limit.getAttribute('upper'))
-                except Exception:
-                    self.get_logger().warn(
-                        '%s is not fixed, nor continuous, but limits are not specified!' % name)
-                    continue
+                # Limits are required, and required to be floats.
+                limit_list = child.getElementsByTagName('limit')
+                if not limit_list:
+                    raise Exception(
+                        f'Limits must be specified for joint "{name}" of type "{jtype}"')
+
+                limit = limit_list[0]
+
+                if not limit.hasAttribute('lower'):
+                    raise Exception(
+                        f'"lower" limit must be specified for joint "{name}" of type "{jtype}"')
+                minval = _convert_to_float(name, jtype, 'lower', limit.getAttribute('lower'))
+
+                if not limit.hasAttribute('upper'):
+                    raise Exception(
+                        f'"upper" limit must be specified for joint "{name}" of type "{jtype}"')
+                maxval = _convert_to_float(name, jtype, 'upper', limit.getAttribute('upper'))
 
             safety_tags = child.getElementsByTagName('safety_controller')
             if self.use_small and len(safety_tags) == 1:
@@ -162,7 +246,7 @@ class JointStatePublisher(rclpy.node.Node):
                 if tag.hasAttribute('soft_upper_limit'):
                     maxval = min(maxval, float(tag.getAttribute('soft_upper_limit')))
 
-            self.joint_list.append(name)
+            joint_list.append(name)
 
             mimic_tags = child.getElementsByTagName('mimic')
             if self.use_mimic and len(mimic_tags) == 1:
@@ -173,10 +257,10 @@ class JointStatePublisher(rclpy.node.Node):
                 if tag.hasAttribute('offset'):
                     entry['offset'] = float(tag.getAttribute('offset'))
 
-                self.dependent_joints[name] = entry
+                dependent_joints[name] = entry
                 continue
 
-            if name in self.dependent_joints:
+            if name in dependent_joints:
                 continue
 
             if self.zeros and name in self.zeros:
@@ -190,33 +274,25 @@ class JointStatePublisher(rclpy.node.Node):
 
             if jtype == 'continuous':
                 joint['continuous'] = True
-            self.free_joints[name] = joint
+            free_joints[name] = joint
+
+        return (free_joints, joint_list, dependent_joints)
 
     def configure_robot(self, description):
         self.get_logger().debug('Got description, configuring robot')
-        try:
-            robot = xml.dom.minidom.parseString(description)
-        except xml.parsers.expat.ExpatError:
-            # If the description fails to parse for some reason, print an error
-            # and get out of here without doing further work.  If we were
-            # already running with a description, we'll continue running with
-            # that older one.
-            self.get_logger().warn('Invalid robot_description given, ignoring')
-            return
+        xmldom = xml.dom.minidom.parseString(description)
 
-        # Make sure to clear out the old joints so we don't get duplicate joints
-        # on a new robot description.
-        self.free_joints = {}
-        self.joint_list = []  # for maintaining the original order of the joints
-
-        # Get root tag to parse file format
-        root = robot.documentElement
+        root = xmldom.documentElement
         if root.tagName == 'sdf':
-            self.init_sdf(robot)
+            (free_joints, joint_list, dependent_joints) = self.init_sdf(xmldom)
         elif root.tagName == 'COLLADA':
-            self.init_collada(robot)
+            (free_joints, joint_list, dependent_joints) = self.init_collada(xmldom)
         else:
-            self.init_urdf(robot)
+            (free_joints, joint_list, dependent_joints) = self.init_urdf(xmldom)
+
+        self.free_joints = free_joints
+        self.joint_list = joint_list  # for maintaining the original order of the joints
+        self.dependent_joints = dependent_joints
 
         if self.robot_description_update_cb is not None:
             self.robot_description_update_cb()
@@ -268,6 +344,12 @@ class JointStatePublisher(rclpy.node.Node):
         except rclpy.exceptions.ParameterAlreadyDeclaredException:
             pass
 
+    def robot_description_cb(self, msg):
+        try:
+            self.configure_robot(msg.data)
+        except Exception as e:
+            self.get_logger().warn(str(e))
+
     def __init__(self, description_file):
         super().__init__('joint_state_publisher',
                          automatically_declare_parameters_from_overrides=True)
@@ -317,16 +399,18 @@ class JointStatePublisher(rclpy.node.Node):
                 description = infp.read()
             self.configure_robot(description)
         else:
-            # Otherwise, subscribe to the '/robot_description' topic and wait
-            # for a callback there
             self.get_logger().info(
                 'Waiting for robot_description to be published on the robot_description topic...')
-            qos = rclpy.qos.QoSProfile(depth=1,
-                                       durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL)
-            self.create_subscription(std_msgs.msg.String,
-                                     'robot_description',
-                                     lambda msg: self.configure_robot(msg.data),
-                                     qos)
+
+        # In all cases, subscribe to the '/robot_description' topic; this allows us to get our
+        # initial configuration in the case we weren't given it on the command-line, and allows
+        # us to dynamically update later.
+        qos = rclpy.qos.QoSProfile(depth=1,
+                                   durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL)
+        self.create_subscription(std_msgs.msg.String,
+                                 'robot_description',
+                                 lambda msg: self.robot_description_cb(msg),
+                                 qos)
 
         self.delta = self.get_param('delta')
 
