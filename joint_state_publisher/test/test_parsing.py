@@ -136,7 +136,7 @@ def test_urdf_revolute_without_limit(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(urdf_filename)
-    assert(str(excinfo.value) == 'Limits must be specified for joint "j12" of type "revolute"')
+    assert str(excinfo.value) == 'Limits must be specified for joint "j12" of type "revolute"'
 
 
 def test_urdf_revolute_without_lower(tmpdir, rclpy_fixture):
@@ -159,8 +159,8 @@ def test_urdf_revolute_without_lower(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(urdf_filename)
-    assert(
-        str(excinfo.value) == '"lower" limit must be specified for joint "j12" of type "revolute"')
+    assert \
+        str(excinfo.value) == '"lower" limit must be specified for joint "j12" of type "revolute"'
 
 
 def test_urdf_revolute_without_upper(tmpdir, rclpy_fixture):
@@ -183,8 +183,8 @@ def test_urdf_revolute_without_upper(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(urdf_filename)
-    assert(
-        str(excinfo.value) == '"upper" limit must be specified for joint "j12" of type "revolute"')
+    assert \
+        str(excinfo.value) == '"upper" limit must be specified for joint "j12" of type "revolute"'
 
 
 def test_urdf_revolute_with_bogus_lower(tmpdir, rclpy_fixture):
@@ -207,8 +207,8 @@ def test_urdf_revolute_with_bogus_lower(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(urdf_filename)
-    assert(
-        str(excinfo.value) == '"lower" limit must be a float for joint "j12" of type "revolute"')
+    assert \
+        str(excinfo.value) == '"lower" limit must be a float for joint "j12" of type "revolute"'
 
 
 def test_urdf_revolute_with_bogus_upper(tmpdir, rclpy_fixture):
@@ -231,8 +231,8 @@ def test_urdf_revolute_with_bogus_upper(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(urdf_filename)
-    assert(
-        str(excinfo.value) == '"upper" limit must be a float for joint "j12" of type "revolute"')
+    assert \
+        str(excinfo.value) == '"upper" limit must be a float for joint "j12" of type "revolute"'
 
 
 def test_urdf_without_robot(tmpdir, rclpy_fixture):
@@ -253,7 +253,7 @@ def test_urdf_without_robot(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(urdf_filename)
-    assert(str(excinfo.value) == 'URDF must have a "robot" tag')
+    assert str(excinfo.value) == 'URDF must have a "robot" tag'
 
 
 def test_collada_revolute(tmpdir, rclpy_fixture):
@@ -371,7 +371,7 @@ def test_collada_revolute_without_limits(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
-    assert(str(excinfo.value) == 'Limits must be specified for joint "j12" of type "revolute"')
+    assert str(excinfo.value) == 'Limits must be specified for joint "j12" of type "revolute"'
 
 
 def test_collada_revolute_without_min(tmpdir, rclpy_fixture):
@@ -398,8 +398,8 @@ def test_collada_revolute_without_min(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
-    assert(
-        str(excinfo.value) == '"min" limit must be specified for joint "j12" of type "revolute"')
+    assert \
+        str(excinfo.value) == '"min" limit must be specified for joint "j12" of type "revolute"'
 
 
 def test_collada_revolute_without_max(tmpdir, rclpy_fixture):
@@ -426,8 +426,8 @@ def test_collada_revolute_without_max(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
-    assert(
-        str(excinfo.value) == '"max" limit must be specified for joint "j12" of type "revolute"')
+    assert \
+        str(excinfo.value) == '"max" limit must be specified for joint "j12" of type "revolute"'
 
 
 def test_collada_revolute_with_bogus_min(tmpdir, rclpy_fixture):
@@ -455,7 +455,7 @@ def test_collada_revolute_with_bogus_min(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
-    assert(str(excinfo.value) == '"min" limit must be a float for joint "j12" of type "revolute"')
+    assert str(excinfo.value) == '"min" limit must be a float for joint "j12" of type "revolute"'
 
 
 def test_collada_revolute_with_bogus_max(tmpdir, rclpy_fixture):
@@ -483,7 +483,7 @@ def test_collada_revolute_with_bogus_max(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
-    assert(str(excinfo.value) == '"max" limit must be a float for joint "j12" of type "revolute"')
+    assert str(excinfo.value) == '"max" limit must be a float for joint "j12" of type "revolute"'
 
 
 def test_collada_no_version_attribute(tmpdir, rclpy_fixture):
@@ -511,7 +511,7 @@ def test_collada_no_version_attribute(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
-    assert(str(excinfo.value) == 'COLLADA must have a version tag')
+    assert str(excinfo.value) == 'COLLADA must have a version tag'
 
 
 def test_collada_version_too_old(tmpdir, rclpy_fixture):
@@ -539,7 +539,7 @@ def test_collada_version_too_old(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
-    assert(str(excinfo.value) == 'COLLADA must be at least version 1.5.0')
+    assert str(excinfo.value) == 'COLLADA must be at least version 1.5.0'
 
 
 def test_collada_without_kinematics_model(tmpdir, rclpy_fixture):
@@ -565,7 +565,7 @@ def test_collada_without_kinematics_model(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
-    assert(str(excinfo.value) == 'COLLADA must have a "kinematics_model" tag')
+    assert str(excinfo.value) == 'COLLADA must have a "kinematics_model" tag'
 
 
 def test_collada_without_technique_common(tmpdir, rclpy_fixture):
@@ -591,7 +591,7 @@ def test_collada_without_technique_common(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(collada_filename)
-    assert(str(excinfo.value) == 'COLLADA must have a "technique_common" tag')
+    assert str(excinfo.value) == 'COLLADA must have a "technique_common" tag'
 
 
 def test_sdf_continuous(tmpdir, rclpy_fixture):
@@ -714,7 +714,7 @@ def test_sdf_revolute_without_limit(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(sdf_filename)
-    assert(str(excinfo.value) == 'Limits must be specified for joint "j12" of type "revolute"')
+    assert str(excinfo.value) == 'Limits must be specified for joint "j12" of type "revolute"'
 
 
 def test_sdf_revolute_without_lower(tmpdir, rclpy_fixture):
@@ -742,8 +742,8 @@ def test_sdf_revolute_without_lower(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(sdf_filename)
-    assert(
-        str(excinfo.value) == '"lower" limit must be specified for joint "j12" of type "revolute"')
+    assert \
+        str(excinfo.value) == '"lower" limit must be specified for joint "j12" of type "revolute"'
 
 
 def test_sdf_revolute_without_upper(tmpdir, rclpy_fixture):
@@ -771,8 +771,8 @@ def test_sdf_revolute_without_upper(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(sdf_filename)
-    assert(
-        str(excinfo.value) == '"upper" limit must be specified for joint "j12" of type "revolute"')
+    assert \
+        str(excinfo.value) == '"upper" limit must be specified for joint "j12" of type "revolute"'
 
 
 def test_sdf_revolute_with_bogus_lower(tmpdir, rclpy_fixture):
@@ -801,8 +801,8 @@ def test_sdf_revolute_with_bogus_lower(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(sdf_filename)
-    assert(
-        str(excinfo.value) == '"lower" limit must be a float for joint "j12" of type "revolute"')
+    assert \
+        str(excinfo.value) == '"lower" limit must be a float for joint "j12" of type "revolute"'
 
 
 def test_sdf_revolute_with_bogus_upper(tmpdir, rclpy_fixture):
@@ -831,8 +831,8 @@ def test_sdf_revolute_with_bogus_upper(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(sdf_filename)
-    assert(
-        str(excinfo.value) == '"upper" limit must be a float for joint "j12" of type "revolute"')
+    assert \
+        str(excinfo.value) == '"upper" limit must be a float for joint "j12" of type "revolute"'
 
 
 def test_sdf_without_model(tmpdir, rclpy_fixture):
@@ -859,4 +859,4 @@ def test_sdf_without_model(tmpdir, rclpy_fixture):
 
     with pytest.raises(Exception) as excinfo:
         joint_state_publisher.joint_state_publisher.JointStatePublisher(sdf_filename)
-    assert(str(excinfo.value) == 'SDF must have a "model" tag')
+    assert str(excinfo.value) == 'SDF must have a "model" tag'
