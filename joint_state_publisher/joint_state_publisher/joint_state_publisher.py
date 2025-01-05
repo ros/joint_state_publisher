@@ -460,7 +460,7 @@ class JointStatePublisher(rclpy.node.Node):
 
         if self.source_update_cb is not None:
             self.source_update_cb()
-        
+
         if self.get_param('relay_sources'):
             self.pub.publish(msg)
 
