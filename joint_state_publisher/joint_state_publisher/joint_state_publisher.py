@@ -364,7 +364,7 @@ class JointStatePublisher(rclpy.node.Node):
                                    ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
         self.declare_ros_parameter('source_list', [],
                                    ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY))
-        self.declare_ros_parameter('relay_sources', True,
+        self.declare_ros_parameter('relay_sources', False,
                                    ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
         self.declare_ros_parameter('use_mimic_tags', True,
                                    ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
