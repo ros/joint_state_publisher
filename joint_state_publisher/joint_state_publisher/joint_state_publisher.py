@@ -370,6 +370,8 @@ class JointStatePublisher(rclpy.node.Node):
                                    ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
         self.declare_ros_parameter('delta', 0.0,
                                    ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE))
+        self.declare_ros_parameter('offset_timestamp', 0.0,
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_DOUBLE))
         # In theory we would also declare 'dependent_joints' and 'zeros' here.
         # Since rclpy doesn't support maps natively, though, we just end up
         # letting 'automatically_declare_parameters_from_overrides' declare
@@ -390,6 +392,7 @@ class JointStatePublisher(rclpy.node.Node):
         self.pub_def_positions = self.get_param('publish_default_positions')
         self.pub_def_vels = self.get_param('publish_default_velocities')
         self.pub_def_efforts = self.get_param('publish_default_efforts')
+        self.offset_timestamp = self.get_param('offset_timestamp')
 
         self.robot_description_update_cb = None
 
@@ -468,8 +471,7 @@ class JointStatePublisher(rclpy.node.Node):
     def timer_callback(self):
         # Publish Joint States
         msg = sensor_msgs.msg.JointState()
-        msg.header.stamp = self.get_clock().now().to_msg()
-
+        msg.header.stamp = (self.get_clock().now() + rclpy.duration.Duration(seconds=self.offset_timestamp)).to_msg()
         if self.delta > 0:
             self.update(self.delta)
 

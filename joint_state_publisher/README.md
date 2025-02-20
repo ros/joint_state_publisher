@@ -18,6 +18,7 @@ Subscribed Topics
 Parameters
 ----------
 * `rate` (int) - The rate at which to publish updates to the `/joint_states` topic.  Defaults to 10.
+* `offset_timestamp`(double) - The offset to add to the timestamp of the published message, in seconds. Defaults to 0.0.
 * `publish_default_positions` (bool) - Whether to publish a default position for each movable joint to the `/joint_states` topic.  Defaults to True.
 * `publish_default_velocities` (bool) - Whether to publish a default velocity for each movable joint to the `/joint_states` topic.  Defaults to False.
 * `publish_default_efforts` (bool) - Whether to publish a default effort for each movable joint to the `/joint_states` topic.  Defaults to False.
