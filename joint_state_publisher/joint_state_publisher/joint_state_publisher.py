@@ -363,7 +363,8 @@ class JointStatePublisher(rclpy.node.Node):
         self.declare_ros_parameter('rate', 10,
                                    ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
         self.declare_ros_parameter('source_list', [],
-                                   ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY))
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY,
+                                   dynamic_typing=True))
         self.declare_ros_parameter('use_mimic_tags', True,
                                    ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
         self.declare_ros_parameter('use_smallest_joint_limits', True,
