@@ -2,6 +2,12 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Show 3 decimal places of joint angle (`#91 <https://github.com/ros/joint_state_publisher/issues/91>`_)
+* Enforce int type for slider values (`#77 <https://github.com/ros/joint_state_publisher/issues/77>`_)
+* Contributors: Michael Görner, VideoSystemsTech
+
 1.15.1 (2022-02-17)
 -------------------
 * Use setuptools instead of distutils (`#45 <https://github.com/ros/joint_state_publisher/issues/45>`_)
