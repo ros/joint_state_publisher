@@ -279,7 +279,7 @@ class JointStatePublisher(rclpy.node.Node):
         return (free_joints, joint_list, dependent_joints)
 
     def configure_robot(self, description):
-        self.get_logger().debug('Got description, configuring robot')
+        self.get_logger().info('Got description, configuring robot')
         xmldom = xml.dom.minidom.parseString(description)
 
         root = xmldom.documentElement
