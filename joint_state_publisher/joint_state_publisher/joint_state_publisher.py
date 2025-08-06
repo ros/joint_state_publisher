@@ -571,9 +571,9 @@ def main():
         rclpy.spin(jsp)
     except KeyboardInterrupt:
         pass
-
-    jsp.destroy_node()
-    rclpy.try_shutdown()
+    finally:
+        jsp.destroy_node()
+        rclpy.try_shutdown()
 
 
 if __name__ == '__main__':
