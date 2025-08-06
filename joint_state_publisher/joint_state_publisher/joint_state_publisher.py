@@ -42,6 +42,7 @@ import packaging.version
 # ROS 2 imports
 from rcl_interfaces.msg import ParameterDescriptor, ParameterType
 import rclpy
+from rclpy.callback_groups import ReentrantCallbackGroup
 import rclpy.node
 import sensor_msgs.msg
 import std_msgs.msg
@@ -415,10 +416,18 @@ class JointStatePublisher(rclpy.node.Node):
         self.delta = self.get_param('delta')
 
         source_list = self.get_param('source_list')
+        source_cb_group = ReentrantCallbackGroup()
         self.sources = []
         for source in source_list:
-            self.sources.append(self.create_subscription(sensor_msgs.msg.JointState, source,
-                                                         self.source_cb, 10))
+            self.sources.append(
+                self.create_subscription(
+                    sensor_msgs.msg.JointState,
+                    source,
+                    self.source_cb,
+                    10,
+                    callback_group = source_cb_group,
+                )
+            )
 
         # The source_update_cb will be called at the end of self.source_cb.
         # The main purpose is to allow external observers (such as the
@@ -571,9 +580,9 @@ def main():
         rclpy.spin(jsp)
     except KeyboardInterrupt:
         pass
-    finally:
-        jsp.destroy_node()
-        rclpy.try_shutdown()
+    
+    jsp.destroy_node()
+    rclpy.try_shutdown()
 
 
 if __name__ == '__main__':
