@@ -364,6 +364,8 @@ class JointStatePublisher(rclpy.node.Node):
                                    ParameterDescriptor(type=ParameterType.PARAMETER_INTEGER))
         self.declare_ros_parameter('source_list', [],
                                    ParameterDescriptor(type=ParameterType.PARAMETER_STRING_ARRAY))
+        self.declare_ros_parameter('relay_sources', False,
+                                   ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
         self.declare_ros_parameter('use_mimic_tags', True,
                                    ParameterDescriptor(type=ParameterType.PARAMETER_BOOL))
         self.declare_ros_parameter('use_smallest_joint_limits', True,
@@ -458,6 +460,9 @@ class JointStatePublisher(rclpy.node.Node):
 
         if self.source_update_cb is not None:
             self.source_update_cb()
+
+        if self.get_param('relay_sources'):
+            self.pub.publish(msg)
 
     def set_source_update_cb(self, user_cb):
         self.source_update_cb = user_cb

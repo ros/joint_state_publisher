@@ -24,6 +24,7 @@ Parameters
 * `use_mimic_tags` (bool) - Whether to honor `<mimic>` tags in the URDF.  Defaults to True.
 * `use_smallest_joint_limits` (bool) - Whether to honor `<safety_controller>` tags in the URDF.  Defaults to True.
 * `source_list` (array of strings) - Each string in this array represents a topic name.  For each string, create a subscription to the named topic of type `sensor_msgs/msg/JointStates`.  Publication to that topic will update the joints named in the message.  Defaults to an empty array.
+* `relay_sources` (bool) - Whether to immediately republish messages coming in on topics from `source_list`. Makes for smoother joints sometimes. Defaults to False.
 * `delta` (double) - How much to automatically move joints during each iteration.  Defaults to 0.0.
 
 #### Mapped Parameters
