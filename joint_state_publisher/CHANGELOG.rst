@@ -2,6 +2,17 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.1 (2026-01-19)
+------------------
+* Cleanup bsd 3 clause license usage (`#120 <https://github.com/ros/joint_state_publisher/issues/120>`_)
+* Correct topic type in source_list parameter description (`#119 <https://github.com/ros/joint_state_publisher/issues/119>`_)
+* upgrade log level of 'got description ...' from DEBUG to INFO (`#114 <https://github.com/ros/joint_state_publisher/issues/114>`_)
+* Flake8 cleanup. (`#107 <https://github.com/ros/joint_state_publisher/issues/107>`_)
+* Cleanup COLLADA support (`#96 <https://github.com/ros/joint_state_publisher/issues/96>`_)
+* Add in linters (`#98 <https://github.com/ros/joint_state_publisher/issues/98>`_)
+* Add in parsing tests. (`#97 <https://github.com/ros/joint_state_publisher/issues/97>`_)
+* Contributors: Alejandro Hernández Cordero, Atticus Russell, Chris Lalancette, Patrick Roncagliolo
+
 2.4.0 (2023-08-04)
 ------------------
 * Support for sdformat robot descriptions (`#55 <https://github.com/ros/joint_state_publisher/issues/55>`_)
