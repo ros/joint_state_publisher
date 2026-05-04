@@ -86,13 +86,13 @@ class FlowLayout(QLayout):
         if self.m_hSpace >= 0:
             return self.m_hSpace
         else:
-            return self.smartSpacing(QStyle.PM_LayoutHorizontalSpacing)
+            return self.smartSpacing(QStyle.PixelMetric.PM_LayoutHorizontalSpacing)
 
     def verticalSpacing(self):
         if self.m_vSpace >= 0:
             return self.m_vSpace
         else:
-            return self.smartSpacing(QStyle.PM_LayoutVerticalSpacing)
+            return self.smartSpacing(QStyle.PixelMetric.PM_LayoutVerticalSpacing)
 
     def count(self):
         return len(self.itemList)
@@ -110,7 +110,7 @@ class FlowLayout(QLayout):
         return None
 
     def expandingDirections(self):
-        return Qt.Orientations(Qt.Orientation(0))
+        return Qt.Orientation(0)
 
     def hasHeightForWidth(self):
         return True
@@ -144,7 +144,9 @@ class FlowLayout(QLayout):
         return parent.spacing()
 
     def doLayout(self, rect, testOnly):
-        left, top, right, bottom = self.getContentsMargins()
+        margins = self.contentsMargins()
+        left, top, right, bottom = (
+            margins.left(), margins.top(), margins.right(), margins.bottom())
         effectiveRect = rect.adjusted(+left, +top, -right, -bottom)
         x = effectiveRect.x()
         y = effectiveRect.y()
@@ -154,10 +156,16 @@ class FlowLayout(QLayout):
             wid = item.widget()
             spaceX = self.horizontalSpacing()
             if spaceX == -1:
-                spaceX = wid.style().layoutSpacing(QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Horizontal)
+                spaceX = wid.style().layoutSpacing(
+                    QSizePolicy.ControlType.PushButton,
+                    QSizePolicy.ControlType.PushButton,
+                    Qt.Orientation.Horizontal)
             spaceY = self.verticalSpacing()
             if spaceY == -1:
-                spaceY = wid.style().layoutSpacing(QSizePolicy.PushButton, QSizePolicy.PushButton, Qt.Vertical)
+                spaceY = wid.style().layoutSpacing(
+                    QSizePolicy.ControlType.PushButton,
+                    QSizePolicy.ControlType.PushButton,
+                    Qt.Orientation.Vertical)
 
             nextX = x + item.sizeHint().width() + spaceX
             if nextX - spaceX > effectiveRect.right() and lineHeight > 0:
