@@ -286,7 +286,7 @@ def main():
 
     threading.Thread(target=jsp_gui.loop).start()
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     main()
