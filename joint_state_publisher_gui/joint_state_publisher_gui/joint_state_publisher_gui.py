@@ -37,9 +37,9 @@ import threading
 
 import rclpy
 
-from python_qt_binding.QtCore import pyqtSlot
 from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtCore import Signal
+from python_qt_binding.QtCore import Slot
 from python_qt_binding.QtGui import QFont
 from python_qt_binding.QtWidgets import QApplication
 from python_qt_binding.QtWidgets import QFormLayout
@@ -80,13 +80,13 @@ class Slider(QWidget):
         self.joint_layout = QVBoxLayout()
         self.row_layout = QHBoxLayout()
 
-        font = QFont("Helvetica", 9, QFont.Bold)
+        font = QFont("Helvetica", 9, QFont.Weight.Bold)
         self.label = QLabel(name)
         self.label.setFont(font)
         self.row_layout.addWidget(self.label)
 
         self.display = QLineEdit("0.00")
-        self.display.setAlignment(Qt.AlignRight)
+        self.display.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.display.setFont(font)
         self.display.setReadOnly(True)
         self.display.setFixedWidth(LINE_EDIT_WIDTH)
@@ -94,7 +94,7 @@ class Slider(QWidget):
 
         self.joint_layout.addLayout(self.row_layout)
 
-        self.slider = QSlider(Qt.Horizontal)
+        self.slider = QSlider(Qt.Orientation.Horizontal)
         self.slider.setFont(font)
         self.slider.setRange(0, RANGE)
         self.slider.setValue(int(RANGE / 2))
@@ -230,7 +230,7 @@ class JointStatePublisherGui(QMainWindow):
         joint['position'] = self.sliderToValue(slidervalue, joint)
         joint_info['display'].setText("%.3f" % joint['position'])
 
-    @pyqtSlot()
+    @Slot()
     def updateSliders(self):
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
@@ -286,7 +286,7 @@ def main():
 
     threading.Thread(target=jsp_gui.loop).start()
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 if __name__ == '__main__':
     main()
