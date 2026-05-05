@@ -2,6 +2,9 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.2 (2026-05-05)
+------------------
+
 2.4.1 (2026-01-19)
 ------------------
 * Cleanup bsd 3 clause license usage (`#120 <https://github.com/ros/joint_state_publisher/issues/120>`_)
