@@ -35,28 +35,26 @@ import signal
 import sys
 import threading
 
-import rclpy
+from joint_state_publisher.joint_state_publisher import JointStatePublisher
+
+from joint_state_publisher_gui.flow_layout import FlowLayout
 
 from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtCore import Signal
 from python_qt_binding.QtCore import Slot
 from python_qt_binding.QtGui import QFont
 from python_qt_binding.QtWidgets import QApplication
-from python_qt_binding.QtWidgets import QFormLayout
-from python_qt_binding.QtWidgets import QGridLayout
 from python_qt_binding.QtWidgets import QHBoxLayout
 from python_qt_binding.QtWidgets import QLabel
 from python_qt_binding.QtWidgets import QLineEdit
 from python_qt_binding.QtWidgets import QMainWindow
 from python_qt_binding.QtWidgets import QPushButton
-from python_qt_binding.QtWidgets import QSlider
 from python_qt_binding.QtWidgets import QScrollArea
+from python_qt_binding.QtWidgets import QSlider
 from python_qt_binding.QtWidgets import QVBoxLayout
 from python_qt_binding.QtWidgets import QWidget
 
-from joint_state_publisher.joint_state_publisher import JointStatePublisher
-
-from joint_state_publisher_gui.flow_layout import FlowLayout
+import rclpy
 
 RANGE = 10000
 LINE_EDIT_WIDTH = 45
@@ -73,19 +71,21 @@ DEFAULT_SLIDER_HEIGHT = 64  # Is the combination of default heights in Slider
 MIN_WIDTH = SLIDER_WIDTH + DEFAULT_CHILD_MARGIN * 4 + DEFAULT_WINDOW_MARGIN * 2
 MIN_HEIGHT = DEFAULT_BTN_HEIGHT * 2 + DEFAULT_WINDOW_MARGIN * 2 + DEFAULT_CHILD_MARGIN * 2
 
+
 class Slider(QWidget):
+
     def __init__(self, name):
         super().__init__()
 
         self.joint_layout = QVBoxLayout()
         self.row_layout = QHBoxLayout()
 
-        font = QFont("Helvetica", 9, QFont.Weight.Bold)
+        font = QFont('Helvetica', 9, QFont.Weight.Bold)
         self.label = QLabel(name)
         self.label.setFont(font)
         self.row_layout.addWidget(self.label)
 
-        self.display = QLineEdit("0.00")
+        self.display = QLineEdit('0.00')
         self.display.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.display.setFont(font)
         self.display.setReadOnly(True)
@@ -183,7 +183,7 @@ class JointStatePublisherGui(QMainWindow):
             self.scroll_layout.removeWidget(sl)
             sl.remove()
 
-        ### Generate sliders ###
+        # Generate sliders
         for name in self.jsp.joint_list:
             if name not in self.jsp.free_joints:
                 continue
@@ -194,11 +194,13 @@ class JointStatePublisherGui(QMainWindow):
 
             slider = Slider(name)
 
-            self.joint_map[name] = {'display': slider.display, 'slider': slider.slider, 'joint': joint}
+            self.joint_map[name] = {
+                'display': slider.display, 'slider': slider.slider, 'joint': joint}
 
             self.scroll_layout.addWidget(slider)
             # Connect to the signal provided by QSignal
-            slider.slider.valueChanged.connect(lambda event,name=name: self.onSliderValueChangedOne(name))
+            slider.slider.valueChanged.connect(
+                lambda event, name=name: self.onSliderValueChangedOne(name))
 
             self.sliders[slider] = slider
 
@@ -228,7 +230,7 @@ class JointStatePublisherGui(QMainWindow):
         slidervalue = joint_info['slider'].value()
         joint = joint_info['joint']
         joint['position'] = self.sliderToValue(slidervalue, joint)
-        joint_info['display'].setText("%.3f" % joint['position'])
+        joint_info['display'].setText('%.3f' % joint['position'])
 
     @Slot()
     def updateSliders(self):
@@ -238,13 +240,13 @@ class JointStatePublisherGui(QMainWindow):
             joint_info['slider'].setValue(slidervalue)
 
     def centerEvent(self, event):
-        self.jsp.get_logger().info("Centering")
+        self.jsp.get_logger().info('Centering')
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
             joint_info['slider'].setValue(self.valueToSlider(joint['zero'], joint))
 
     def randomizeEvent(self, event):
-        self.jsp.get_logger().info("Randomizing")
+        self.jsp.get_logger().info('Randomizing')
         for name, joint_info in self.joint_map.items():
             joint = joint_info['joint']
             joint_info['slider'].setValue(
@@ -287,6 +289,7 @@ def main():
     threading.Thread(target=jsp_gui.loop).start()
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec())
+
 
 if __name__ == '__main__':
     main()
