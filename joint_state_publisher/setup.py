@@ -21,7 +21,6 @@ setup(
     keywords=['ROS'],
     classifiers=[
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD',
         'Programming Language :: Python :: 3',
         'Topic :: Software Development',
     ],
@@ -30,7 +29,11 @@ setup(
         'robot described with URDF.'
     ),
     license='BSD',
-    tests_require=['pytest'],
+    extras_require={
+        'test': [
+            'pytest',
+        ],
+    },
     entry_points={
         'console_scripts': [
             'joint_state_publisher = joint_state_publisher.joint_state_publisher:main',
