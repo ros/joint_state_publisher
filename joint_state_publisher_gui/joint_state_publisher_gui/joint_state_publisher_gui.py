@@ -122,7 +122,7 @@ class JointStatePublisherGui(QMainWindow):
     initialize = Signal()
 
     def __init__(self, title, jsp):
-        super(JointStatePublisherGui, self).__init__()
+        super().__init__()
 
         self.joint_map = {}
 
@@ -288,7 +288,9 @@ def main():
 
     threading.Thread(target=jsp_gui.loop).start()
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    sys.exit(app.exec())
+    # exec() in Qt6 / PyQt; exec_() in Qt5 PySide2
+    sys.exit(app.exec() if hasattr(app, 'exec') else app.exec_())
+
 
 
 if __name__ == '__main__':
