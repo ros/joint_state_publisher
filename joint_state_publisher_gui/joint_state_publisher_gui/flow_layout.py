@@ -54,20 +54,21 @@
 # $QT_END_LICENSE$
 #
 
-from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtCore import QPoint
 from python_qt_binding.QtCore import QRect
 from python_qt_binding.QtCore import QSize
+from python_qt_binding.QtCore import Qt
 from python_qt_binding.QtWidgets import QLayout
 from python_qt_binding.QtWidgets import QSizePolicy
 from python_qt_binding.QtWidgets import QStyle
 
 
 class FlowLayout(QLayout):
+
     def __init__(self, parent=None, margin=-1, hSpacing=-1, vSpacing=-1):
         super().__init__(parent)
 
-        self.itemList = list()
+        self.itemList = []
         self.m_hSpace = hSpacing
         self.m_vSpace = vSpacing
 
