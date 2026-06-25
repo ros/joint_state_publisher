@@ -1,4 +1,4 @@
-<package format="2">
+<package format="3">
   <name>joint_state_publisher</name>
   <version>2.4.2</version>
   <description>
