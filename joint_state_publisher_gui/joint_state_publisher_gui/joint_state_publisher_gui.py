@@ -230,7 +230,7 @@ class JointStatePublisherGui(QMainWindow):
         slidervalue = joint_info['slider'].value()
         joint = joint_info['joint']
         joint['position'] = self.sliderToValue(slidervalue, joint)
-        joint_info['display'].setText('%.3f' % joint['position'])
+        joint_info['display'].setText(f"{joint['position']:.3f}")
 
     @Slot()
     def updateSliders(self):

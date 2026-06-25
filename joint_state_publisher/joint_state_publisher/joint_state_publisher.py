@@ -308,13 +308,13 @@ class JointStatePublisher(rclpy.node.Node):
             # First split on the dots; there should be one and exactly one dot
             split = name.split('.')
             if len(split) != 2:
-                raise Exception("Invalid dependent_joint name '%s'" % (name))
+                raise Exception(f"Invalid dependent_joint name '{name}'")
             newkey = split[0]
             newvalue = split[1]
             if newvalue not in allowed_joint_names:
                 allowed_joint_string = ', '.join(f"'{w}'" for w in allowed_joint_names)
-                raise Exception("Invalid dependent_joint name '%s' "
-                                '(allowed values are %s)' % (newvalue, allowed_joint_string))
+                raise Exception(f"Invalid dependent_joint name '{newvalue}' "
+                                f'(allowed values are {allowed_joint_string})')
             if newkey in dj:
                 dj[newkey].update({newvalue: param.value})
             else:
@@ -406,7 +406,7 @@ class JointStatePublisher(rclpy.node.Node):
                                    durability=rclpy.qos.QoSDurabilityPolicy.TRANSIENT_LOCAL)
         self.create_subscription(std_msgs.msg.String,
                                  'robot_description',
-                                 lambda msg: self.robot_description_cb(msg),
+                                 self.robot_description_cb,
                                  qos)
 
         self.delta = self.get_param('delta')
@@ -427,8 +427,7 @@ class JointStatePublisher(rclpy.node.Node):
         self.timer = self.create_timer(1.0 / self.get_param('rate'), self.timer_callback)
 
     def source_cb(self, msg):
-        for i in range(len(msg.name)):
-            name = msg.name[i]
+        for i, name in enumerate(msg.name):
             if name not in self.free_joints:
                 continue
 
