@@ -22,7 +22,7 @@ setup(
     classifiers=[
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD',
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
         'Topic :: Software Development',
     ],
     description=(
