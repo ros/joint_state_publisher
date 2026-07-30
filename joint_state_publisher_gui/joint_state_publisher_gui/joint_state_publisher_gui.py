@@ -88,7 +88,7 @@ class Slider(QWidget):
         self.display = QLineEdit('0.00')
         self.display.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.display.setFont(font)
-        self.display.setReadOnly(True)
+        self.display.setReadOnly(False)
         self.display.setFixedWidth(LINE_EDIT_WIDTH)
         self.row_layout.addWidget(self.display)
 
@@ -201,6 +201,8 @@ class JointStatePublisherGui(QMainWindow):
             # Connect to the signal provided by QSignal
             slider.slider.valueChanged.connect(
                 lambda event, name=name: self.onSliderValueChangedOne(name))
+            slider.display.editingFinished.connect(
+                lambda name=name: self.onDisplayValueChangedOne(name))
 
             self.sliders[slider] = slider
 
@@ -231,6 +233,21 @@ class JointStatePublisherGui(QMainWindow):
         joint = joint_info['joint']
         joint['position'] = self.sliderToValue(slidervalue, joint)
         joint_info['display'].setText(f"{joint['position']:.3f}")
+
+    def onDisplayValueChangedOne(self, name):
+        joint_info = self.joint_map[name]
+        display = joint_info['display']
+        try:
+            value = float(display.text())
+        except ValueError:
+            display.setText(f"{joint_info['joint']['position']:.3f}")
+            return
+        clamped_value = max(min(value, joint_info['joint']['max']), joint_info['joint']['min'])
+        joint_info['joint']['position'] = clamped_value
+        joint_info['display'].setText(f"{clamped_value:.3f}")
+        joint_info['slider'].blockSignals(True)
+        joint_info['slider'].setValue(self.valueToSlider(clamped_value, joint_info['joint']))
+        joint_info['slider'].blockSignals(False)
 
     @Slot()
     def updateSliders(self):
