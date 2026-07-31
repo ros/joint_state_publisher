@@ -2,6 +2,13 @@
 Changelog for package joint_state_publisher
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+2.4.3 (2026-07-31)
+------------------
+* Python3 modernization (`#125 <https://github.com/ros/joint_state_publisher/issues/125>`_)
+* fix deprecation warnings (`#123 <https://github.com/ros/joint_state_publisher/issues/123>`_)
+* Support Qt5/Qt6 nad minor updates (`#122 <https://github.com/ros/joint_state_publisher/issues/122>`_)
+* Contributors: Alejandro Hernández Cordero
+
 2.4.2 (2026-05-05)
 ------------------
 
