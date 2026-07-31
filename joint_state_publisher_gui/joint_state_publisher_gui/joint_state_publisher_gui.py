@@ -237,17 +237,23 @@ class JointStatePublisherGui(QMainWindow):
     def onDisplayValueChangedOne(self, name):
         joint_info = self.joint_map[name]
         display = joint_info['display']
+        joint = joint_info['joint']
         try:
             value = float(display.text())
         except ValueError:
-            display.setText(f"{joint_info['joint']['position']:.3f}")
+            value = None
+        # NaN would bypass the clamp below and end up published on /joint_states
+        if value is None or not math.isfinite(value):
+            display.setText(f"{joint['position']:.3f}")
             return
-        clamped_value = max(min(value, joint_info['joint']['max']), joint_info['joint']['min'])
-        joint_info['joint']['position'] = clamped_value
-        joint_info['display'].setText(f"{clamped_value:.3f}")
+        clamped_value = max(min(value, joint['max']), joint['min'])
+        joint['position'] = clamped_value
+        display.setText(f'{clamped_value:.3f}')
         joint_info['slider'].blockSignals(True)
-        joint_info['slider'].setValue(self.valueToSlider(clamped_value, joint_info['joint']))
-        joint_info['slider'].blockSignals(False)
+        try:
+            joint_info['slider'].setValue(self.valueToSlider(clamped_value, joint))
+        finally:
+            joint_info['slider'].blockSignals(False)
 
     @Slot()
     def updateSliders(self):
