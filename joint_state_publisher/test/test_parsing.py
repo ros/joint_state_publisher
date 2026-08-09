@@ -666,6 +666,44 @@ def test_sdf_revolute(tmpdir, rclpy_fixture):
     assert not jsp.dependent_joints
 
 
+def test_sdf_revolute_inf(tmpdir, rclpy_fixture):
+    sdf = """<?xml version="1.0"?>
+<sdf version="1.8">
+  <model name='multi_joint_robot'>
+    <link name="link1"/>
+    <link name="link2"/>
+
+    <joint name='j12' type='revolute'>
+      <parent>link1</parent>
+      <child>link2</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-inf</lower>
+          <upper>inf</upper>
+        </limit>
+      </axis>
+    </joint>
+  </model>
+</sdf>"""
+
+    sdf_filename = tmpdir / 'revolute.sdf'
+    sdf_filename.write_text(sdf, encoding='utf-8')
+
+    jsp = joint_state_publisher.joint_state_publisher.JointStatePublisher(sdf_filename)
+
+    assert len(jsp.free_joints) == 1
+    assert jsp.free_joints['j12']['min'] == -math.pi
+    assert jsp.free_joints['j12']['max'] == math.pi
+    assert jsp.free_joints['j12']['position'] == 0.0
+    assert jsp.free_joints['j12']['zero'] == 0.0
+
+    assert len(jsp.joint_list) == 1
+    assert jsp.joint_list[0] == 'j12'
+
+    assert not jsp.dependent_joints
+
+
 def test_sdf_fixed(tmpdir, rclpy_fixture):
     sdf = """<?xml version="1.0"?>
 <sdf version="1.8">
